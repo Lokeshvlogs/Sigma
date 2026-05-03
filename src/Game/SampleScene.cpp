@@ -34,8 +34,8 @@ namespace Game
         sceneObject.mesh = mesh;
         sceneObject.material.diffuseTexture = texture;
         sceneObject.material.diffuseTexturePath = textureAssetPath;
-        sceneObject.material.pixelShaderPath = "assets\\shaders\\base_textured_pixel.hlsl";
-        sceneObject.material.highlightPixelShaderPath = "assets\\shaders\\face_highlight_pixel.hlsl";
+        sceneObject.material.pixelShaderPath = "assets\\shaders\\render_mesh.hlsl";
+        sceneObject.material.highlightPixelShaderPath = "assets\\shaders\\face_highlight.hlsl";
         sceneObject.material.faceTints = std::vector<D3DCOLOR>
         {
             D3DCOLOR_XRGB(232, 222, 204),
