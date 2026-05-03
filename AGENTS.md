@@ -6,8 +6,8 @@ This repository is a small Win32 Direct3D 9 C++17 demo engine. Source lives unde
 
 - `src/main.cpp` is the Win32 entry point and loads the game scene.
 - `src/Engine/` contains reusable engine code: application loop, Direct3D renderer, input, scenes, game objects, components, meshes, textures, and transforms.
-- `src/Game/` contains game-specific scene composition, currently `WoodCubeScene`.
-- `assets/` contains runtime content. The required texture is `assets/textures/wood.jpg`; `build.bat` copies it into `build/assets`.
+- `src/Game/` contains game-specific scene composition, currently `SampleScene`.
+- `assets/` contains runtime content. The sample texture is `assets/textures/default_diffuse.jpg`; `build.bat` copies it into `build/assets`.
 - `build/` is generated output and should not be treated as source.
 
 There is no dedicated `tests/` directory.

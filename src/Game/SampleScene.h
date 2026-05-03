@@ -4,7 +4,7 @@
 
 namespace Game
 {
-    class WoodCubeScene final : public Engine::Scene
+    class SampleScene final : public Engine::Scene
     {
     public:
         bool Load(Engine::GameContext& context) override;

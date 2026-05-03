@@ -2,12 +2,12 @@
 #include <windows.h>
 
 #include "Engine/Application.h"
-#include "Game/WoodCubeScene.h"
+#include "Game/SampleScene.h"
 
 #include <memory>
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int showCommand)
 {
     Engine::Application application(instance, showCommand);
-    return application.Run(std::make_unique<Game::WoodCubeScene>());
+    return application.Run(std::make_unique<Game::SampleScene>());
 }

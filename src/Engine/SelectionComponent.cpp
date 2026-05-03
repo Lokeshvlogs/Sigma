@@ -4,7 +4,7 @@
 #include "GameContext.h"
 #include "InputManager.h"
 #include "GameObject.h"
-#include "MeshRendererComponent.h"
+#include "SceneObject.h"
 #include "TransformComponent.h"
 
 #include <d3dx9.h>
@@ -12,8 +12,9 @@
 
 namespace Engine
 {
-    SelectionComponent::SelectionComponent(float localBoundingRadius)
+    SelectionComponent::SelectionComponent(float localBoundingRadius, SceneObject* targetSceneObject)
         : localBoundingRadius_(localBoundingRadius)
+        , targetSceneObject_(targetSceneObject)
     {
     }
 
@@ -26,10 +27,10 @@ namespace Engine
             selected_ = hoveredFaceIndex_ != -1;
         }
 
-        if (auto* renderer = owner.GetComponent<MeshRendererComponent>())
+        if (targetSceneObject_)
         {
-            renderer->SetSelected(selected_);
-            renderer->SetHoveredFaceIndex(hoveredFaceIndex_);
+            targetSceneObject_->selected = selected_;
+            targetSceneObject_->hoveredFaceIndex = hoveredFaceIndex_;
         }
     }
 

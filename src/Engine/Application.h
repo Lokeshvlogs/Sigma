@@ -5,6 +5,7 @@
 
 #include "Direct3DRenderer.h"
 #include "InputManager.h"
+#include "RenderManager.h"
 #include "Scene.h"
 
 #include <memory>
@@ -30,6 +31,7 @@ namespace Engine
         HWND hwnd_ = nullptr;
         Direct3DRenderer renderer_;
         InputManager input_;
+        RenderManager renderManager_;
         LARGE_INTEGER qpcFrequency_ = {};
         LARGE_INTEGER lastCounter_ = {};
         float fpsAccumulator_ = 0.0f;

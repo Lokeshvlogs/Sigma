@@ -4,10 +4,12 @@
 
 namespace Engine
 {
+    struct SceneObject;
+
     class SelectionComponent final : public Component
     {
     public:
-        explicit SelectionComponent(float localBoundingRadius);
+        SelectionComponent(float localBoundingRadius, SceneObject* targetSceneObject);
 
         bool IsSelected() const { return selected_; }
         int HoveredFaceIndex() const { return hoveredFaceIndex_; }
@@ -18,6 +20,7 @@ namespace Engine
         int HitTestFace(GameObject& owner, GameContext& context) const;
 
         float localBoundingRadius_ = 1.0f;
+        SceneObject* targetSceneObject_ = nullptr;
         int hoveredFaceIndex_ = -1;
         bool selected_ = true;
     };

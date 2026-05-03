@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 rem README
-rem 1. Place runtime textures at assets\textures, especially assets\textures\wood.jpg.
+rem 1. Place runtime textures at assets\textures, especially assets\textures\default_diffuse.jpg.
 rem 2. This script will attempt to initialize the Visual Studio C++ build
 rem    environment (cl.exe) automatically if it's not already available.
 rem    If automatic detection fails, open a Visual Studio x86 Native Tools
@@ -106,10 +106,10 @@ if errorlevel 1 (
 
 if not exist build mkdir build
 if not exist build\obj mkdir build\obj
-if not exist assets\textures\wood.jpg (
+if not exist assets\textures\default_diffuse.jpg (
     echo Missing required texture:
-    echo   assets\textures\wood.jpg
-    echo Add a wood texture there, then run build.bat again.
+    echo   assets\textures\default_diffuse.jpg
+    echo Add a diffuse texture there, then run build.bat again.
     exit /b 1
 )
 

@@ -12,6 +12,15 @@ namespace Engine
         return reference;
     }
 
+    SceneObject& Scene::CreateSceneObject(GameObject& gameObject)
+    {
+        auto sceneObject = std::make_unique<SceneObject>();
+        sceneObject->gameObject = &gameObject;
+        SceneObject& reference = *sceneObject;
+        sceneObjects_.push_back(std::move(sceneObject));
+        return reference;
+    }
+
     void Scene::Start()
     {
         for (auto& object : objects_)
@@ -25,14 +34,6 @@ namespace Engine
         for (auto& object : objects_)
         {
             object->Update(deltaSeconds, context);
-        }
-    }
-
-    void Scene::Render(GameContext& context)
-    {
-        for (auto& object : objects_)
-        {
-            object->Render(context);
         }
     }
 }

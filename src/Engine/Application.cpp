@@ -41,6 +41,8 @@ namespace Engine
             return 1;
         }
         scene->Start();
+        renderManager_.ClearScenes();
+        renderManager_.AddScene(*scene);
 
         QueryPerformanceFrequency(&qpcFrequency_);
         QueryPerformanceCounter(&lastCounter_);
@@ -103,7 +105,7 @@ namespace Engine
             {
                 if (renderer_.BeginFrame(D3DCOLOR_XRGB(32, 36, 42)))
                 {
-                    scene->Render(context);
+                    renderManager_.Render(context);
                     renderer_.EndFrame();
                 }
             }
