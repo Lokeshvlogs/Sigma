@@ -1,0 +1,24 @@
+# Build folders
+build/
+bin/
+obj/
+out/
+assets/
+
+# Compiled files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+
+# Logs
+*.log
