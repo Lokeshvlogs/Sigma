@@ -22,7 +22,7 @@ Project layout:
 - `assets/textures/` - diffuse/albedo textures such as `wood.jpg`.
 - `assets/bump_maps/` - normal or bump maps for future materials.
 - `assets/images/` - UI, reference, splash, or non-material images.
-- `assets/shaders/` - shader files for future programmable-pipeline experiments.
+- `assets/shaders/` - HLSL pixel shaders used by the wood and hover-highlight render passes.
 - `assets/static_objects/` - static meshes or exported simulation/game objects.
 - `build/` - generated executable, object files, and copied runtime assets.
 
@@ -31,7 +31,8 @@ Controls:
 - `Space` toggles automatic rotation for the selected object.
 - Arrow keys rotate the selected object.
 - Left-click the cube to select it.
+- Hover a cube face to highlight it with a blue shader pass.
 - Left-drag the selected cube to rotate it with the mouse.
 - `Esc` quits.
 
-The engine uses a component-based object model. A game object is assembled from reusable components such as `TransformComponent`, `MeshRendererComponent`, `SelectionComponent`, `AutoRotateComponent`, `KeyboardRotationComponent`, and `MouseDragRotationComponent`.
+The engine uses a component-based object model. A game object is assembled from reusable components such as `TransformComponent`, `MeshRendererComponent`, `SelectionComponent`, `AutoRotateComponent`, `KeyboardRotationComponent`, and `MouseDragRotationComponent`. Rendering uses two pixel-shader passes loaded from `assets/shaders`: a textured wood pass followed by a hovered-face highlight pass.

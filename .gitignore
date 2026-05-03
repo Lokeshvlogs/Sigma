@@ -3,7 +3,10 @@ build/
 bin/
 obj/
 out/
-assets/
+assets/*
+!assets/shaders/
+assets/shaders/*
+!assets/shaders/*.hlsl
 
 # Compiled files
 *.o
