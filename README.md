@@ -1,4 +1,5 @@
-# Sigma Engine - Win32 DirectX 9 Wood Cube
+<<<<<<< HEAD
+# C++ Sigma 3D Game Engine - Win32 DirectX
 
 Place runtime content under `assets`. The default cube texture lives at `assets/textures/wood.jpg`; `build.bat` copies the full asset tree to `build/assets` so the executable can load it at runtime.
 
