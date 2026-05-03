@@ -1,8 +1,8 @@
 # C++ Sigma 3D Game Engine - Win32 DirectX
 
-Place runtime content under `assets`. The sample diffuse texture lives at `assets/textures/default_diffuse.jpg`; `build.bat` copies the full asset tree to `build/assets` so the executable can load it at runtime.
+Place runtime content under `assets`. The sample diffuse texture lives at `assets/textures/default_diffuse.jpg`; the CMake build copies the full asset tree to `build/assets` so the executable can load it at runtime.
 
-Build from a Visual Studio x86 Native Tools Command Prompt:
+Build:
 
 ```bat
 build.bat
@@ -11,7 +11,7 @@ build.bat
 Run:
 
 ```bat
-build\Sigma.exe
+run.bat
 ```
 
 Project layout:
@@ -24,7 +24,7 @@ Project layout:
 - `assets/images/` - UI, reference, splash, or non-material images.
 - `assets/shaders/` - HLSL pixel shaders used by material and hover-highlight render passes.
 - `assets/static_objects/` - static meshes or exported simulation/game objects.
-- `build/` - generated executable, object files, and copied runtime assets.
+- `build/` - generated executable, CMake files, object files, and copied runtime assets.
 
 Controls:
 

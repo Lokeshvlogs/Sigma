@@ -1,14 +1,12 @@
 #include "SampleScene.h"
 
+#include "../Engine/AssetManager.h"
 #include "../Engine/Direct3DRenderer.h"
 #include "../Engine/GameContext.h"
 #include "../Engine/Material.h"
-#include "../Engine/Mesh.h"
-#include "../Engine/PathUtils.h"
 #include "../Engine/RotationComponents.h"
 #include "../Engine/SceneObject.h"
 #include "../Engine/SelectionComponent.h"
-#include "../Engine/Texture2D.h"
 #include "../Engine/TransformComponent.h"
 
 #include <vector>
@@ -17,12 +15,12 @@ namespace Game
 {
     bool SampleScene::Load(Engine::GameContext& context)
     {
-        const char* textureAssetPath = "assets\\textures\\default_diffuse.jpg";
-        char texturePath[MAX_PATH];
-        Engine::BuildExecutableRelativePath(textureAssetPath, texturePath, MAX_PATH);
+        const std::string meshAssetPath = "assets\\static_objects\\wooden_cube.fbx";
+        const std::string textureAssetPath = "assets\\textures\\wood019_color_1k.png";
 
-        auto mesh = Engine::Mesh::CreateTexturedCube(context.renderer.Device());
-        auto texture = Engine::Texture2D::LoadFromFile(context.renderer.Device(), texturePath);
+        Engine::AssetManager& assets = Engine::AssetManager::Instance();
+        auto mesh = assets.LoadMesh(context.renderer.Device(), meshAssetPath);
+        auto texture = assets.LoadTexture(context.renderer.Device(), textureAssetPath);
         if (!mesh || !texture)
         {
             return false;

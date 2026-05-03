@@ -2,95 +2,178 @@
 
 #include "ComPtrUtils.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 
 namespace Engine
 {
+    namespace
+    {
+        void AppendMeshData(
+            const aiMesh& sourceMesh,
+            std::vector<Vertex>& vertices,
+            std::vector<WORD>& indices,
+            std::vector<MeshFaceSpan>& faceSpans,
+            float& boundingRadius)
+        {
+            const UINT baseVertex = static_cast<UINT>(vertices.size());
+            for (unsigned int vertexIndex = 0; vertexIndex < sourceMesh.mNumVertices; ++vertexIndex)
+            {
+                const aiVector3D& position = sourceMesh.mVertices[vertexIndex];
+                aiVector3D uv(0.0f, 0.0f, 0.0f);
+                if (sourceMesh.HasTextureCoords(0))
+                {
+                    uv = sourceMesh.mTextureCoords[0][vertexIndex];
+                }
+
+                vertices.push_back(
+                    {
+                        position.x,
+                        position.y,
+                        position.z,
+                        uv.x,
+                        uv.y
+                    });
+
+                float radius = sqrtf(position.x * position.x + position.y * position.y + position.z * position.z);
+                boundingRadius = std::max(boundingRadius, radius);
+            }
+
+            std::vector<MeshFaceSpan> meshFaceSpans;
+            for (unsigned int faceIndex = 0; faceIndex < sourceMesh.mNumFaces; ++faceIndex)
+            {
+                const aiFace& face = sourceMesh.mFaces[faceIndex];
+                if (face.mNumIndices != 3)
+                {
+                    continue;
+                }
+
+                MeshFaceSpan span = {};
+                span.startIndex = static_cast<UINT>(indices.size());
+                span.primitiveCount = 1;
+                meshFaceSpans.push_back(span);
+
+                for (unsigned int indexIndex = 0; indexIndex < face.mNumIndices; ++indexIndex)
+                {
+                    indices.push_back(static_cast<WORD>(baseVertex + face.mIndices[indexIndex]));
+                }
+            }
+
+            if (meshFaceSpans.size() == 12)
+            {
+                for (size_t faceIndex = 0; faceIndex < meshFaceSpans.size(); faceIndex += 2)
+                {
+                    MeshFaceSpan span = {};
+                    span.startIndex = meshFaceSpans[faceIndex].startIndex;
+                    span.primitiveCount = 2;
+                    faceSpans.push_back(span);
+                }
+                return;
+            }
+
+            faceSpans.insert(faceSpans.end(), meshFaceSpans.begin(), meshFaceSpans.end());
+        }
+    }
+
     Mesh::~Mesh()
     {
         SafeRelease(indexBuffer_);
         SafeRelease(vertexBuffer_);
     }
 
-    std::shared_ptr<Mesh> Mesh::CreateTexturedCube(IDirect3DDevice9* device)
+    std::shared_ptr<Mesh> Mesh::LoadFromFile(IDirect3DDevice9* device, const char* path)
     {
-        const Vertex vertices[] =
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile(
+            path,
+            aiProcess_Triangulate |
+            aiProcess_SortByPType |
+            aiProcess_ValidateDataStructure);
+
+        if (!scene || !scene->HasMeshes())
         {
-            { -1.0f,  1.0f, -1.0f, 0.0f, 0.0f },
-            {  1.0f,  1.0f, -1.0f, 1.0f, 0.0f },
-            {  1.0f, -1.0f, -1.0f, 1.0f, 1.0f },
-            { -1.0f, -1.0f, -1.0f, 0.0f, 1.0f },
+            return nullptr;
+        }
 
-            {  1.0f,  1.0f,  1.0f, 0.0f, 0.0f },
-            { -1.0f,  1.0f,  1.0f, 1.0f, 0.0f },
-            { -1.0f, -1.0f,  1.0f, 1.0f, 1.0f },
-            {  1.0f, -1.0f,  1.0f, 0.0f, 1.0f },
+        std::vector<Vertex> vertices;
+        std::vector<WORD> indices;
+        std::vector<MeshFaceSpan> faceSpans;
+        float boundingRadius = 0.0f;
 
-            { -1.0f,  1.0f,  1.0f, 0.0f, 0.0f },
-            { -1.0f,  1.0f, -1.0f, 1.0f, 0.0f },
-            { -1.0f, -1.0f, -1.0f, 1.0f, 1.0f },
-            { -1.0f, -1.0f,  1.0f, 0.0f, 1.0f },
-
-            {  1.0f,  1.0f, -1.0f, 0.0f, 0.0f },
-            {  1.0f,  1.0f,  1.0f, 1.0f, 0.0f },
-            {  1.0f, -1.0f,  1.0f, 1.0f, 1.0f },
-            {  1.0f, -1.0f, -1.0f, 0.0f, 1.0f },
-
-            { -1.0f,  1.0f,  1.0f, 0.0f, 0.0f },
-            {  1.0f,  1.0f,  1.0f, 1.0f, 0.0f },
-            {  1.0f,  1.0f, -1.0f, 1.0f, 1.0f },
-            { -1.0f,  1.0f, -1.0f, 0.0f, 1.0f },
-
-            { -1.0f, -1.0f, -1.0f, 0.0f, 0.0f },
-            {  1.0f, -1.0f, -1.0f, 1.0f, 0.0f },
-            {  1.0f, -1.0f,  1.0f, 1.0f, 1.0f },
-            { -1.0f, -1.0f,  1.0f, 0.0f, 1.0f },
-        };
-
-        const WORD indices[] =
+        for (unsigned int meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
         {
-             0,  1,  2,   0,  2,  3,
-             4,  5,  6,   4,  6,  7,
-             8,  9, 10,   8, 10, 11,
-            12, 13, 14,  12, 14, 15,
-            16, 17, 18,  16, 18, 19,
-            20, 21, 22,  20, 22, 23,
-        };
+            const aiMesh* sourceMesh = scene->mMeshes[meshIndex];
+            if (!sourceMesh)
+            {
+                continue;
+            }
+
+            if (vertices.size() + sourceMesh->mNumVertices > 65535)
+            {
+                return nullptr;
+            }
+
+            AppendMeshData(*sourceMesh, vertices, indices, faceSpans, boundingRadius);
+        }
+
+        return CreateFromData(device, vertices, indices, faceSpans, boundingRadius);
+    }
+
+    std::shared_ptr<Mesh> Mesh::CreateFromData(
+        IDirect3DDevice9* device,
+        const std::vector<Vertex>& vertices,
+        const std::vector<WORD>& indices,
+        std::vector<MeshFaceSpan> faceSpans,
+        float boundingRadius)
+    {
+        if (vertices.empty() || indices.empty())
+        {
+            return nullptr;
+        }
 
         std::shared_ptr<Mesh> mesh(new Mesh());
-        HRESULT hr = device->CreateVertexBuffer(sizeof(vertices), 0, Vertex::FVF, D3DPOOL_MANAGED, &mesh->vertexBuffer_, nullptr);
+        const UINT vertexBufferSize = static_cast<UINT>(vertices.size() * sizeof(Vertex));
+        HRESULT hr = device->CreateVertexBuffer(vertexBufferSize, 0, Vertex::FVF, D3DPOOL_MANAGED, &mesh->vertexBuffer_, nullptr);
         if (FAILED(hr))
         {
             return nullptr;
         }
 
         void* vertexMemory = nullptr;
-        hr = mesh->vertexBuffer_->Lock(0, sizeof(vertices), &vertexMemory, 0);
+        hr = mesh->vertexBuffer_->Lock(0, vertexBufferSize, &vertexMemory, 0);
         if (FAILED(hr))
         {
             return nullptr;
         }
-        memcpy(vertexMemory, vertices, sizeof(vertices));
+        memcpy(vertexMemory, vertices.data(), vertexBufferSize);
         mesh->vertexBuffer_->Unlock();
 
-        hr = device->CreateIndexBuffer(sizeof(indices), 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &mesh->indexBuffer_, nullptr);
+        const UINT indexBufferSize = static_cast<UINT>(indices.size() * sizeof(WORD));
+        hr = device->CreateIndexBuffer(indexBufferSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &mesh->indexBuffer_, nullptr);
         if (FAILED(hr))
         {
             return nullptr;
         }
 
         void* indexMemory = nullptr;
-        hr = mesh->indexBuffer_->Lock(0, sizeof(indices), &indexMemory, 0);
+        hr = mesh->indexBuffer_->Lock(0, indexBufferSize, &indexMemory, 0);
         if (FAILED(hr))
         {
             return nullptr;
         }
-        memcpy(indexMemory, indices, sizeof(indices));
+        memcpy(indexMemory, indices.data(), indexBufferSize);
         mesh->indexBuffer_->Unlock();
 
-        mesh->vertexCount_ = 24;
-        mesh->primitiveCount_ = 12;
-        mesh->faceCount_ = 6;
+        mesh->vertexCount_ = static_cast<UINT>(vertices.size());
+        mesh->primitiveCount_ = static_cast<UINT>(indices.size() / 3);
+        mesh->faceCount_ = static_cast<int>(faceSpans.size());
+        mesh->boundingRadius_ = boundingRadius > 0.0f ? boundingRadius : 1.0f;
+        mesh->faceSpans_ = std::move(faceSpans);
         return mesh;
     }
 
@@ -108,6 +191,12 @@ namespace Engine
 
     void Mesh::DrawFace(IDirect3DDevice9* device, int faceIndex) const
     {
-        device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, vertexCount_, faceIndex * 6, 2);
+        if (faceIndex < 0 || faceIndex >= static_cast<int>(faceSpans_.size()))
+        {
+            return;
+        }
+
+        const MeshFaceSpan& span = faceSpans_[faceIndex];
+        device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, vertexCount_, span.startIndex, span.primitiveCount);
     }
 }

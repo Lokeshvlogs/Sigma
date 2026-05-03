@@ -1,0 +1,9 @@
+wooden_cube.fbx
+Source: Unity MeshSync sample Cube.fbx
+URL: https://github.com/unity3d-jp/MeshSync/blob/dev/MeshSync~/Assets/Models/Cube.fbx
+License: Apache 2.0
+
+wood019_color_1k.png
+Source: ambientCG Wood019 via Wikimedia Commons
+URL: https://commons.wikimedia.org/wiki/File:Wood019_8K_Color.png
+License: Creative Commons CC0 1.0 Universal Public Domain Dedication

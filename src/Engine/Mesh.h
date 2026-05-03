@@ -4,10 +4,17 @@
 
 #include <d3d9.h>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace Engine
 {
+    struct MeshFaceSpan
+    {
+        UINT startIndex = 0;
+        UINT primitiveCount = 0;
+    };
+
     class Mesh
     {
     public:
@@ -16,7 +23,7 @@ namespace Engine
         Mesh(const Mesh&) = delete;
         Mesh& operator=(const Mesh&) = delete;
 
-        static std::shared_ptr<Mesh> CreateTexturedCube(IDirect3DDevice9* device);
+        static std::shared_ptr<Mesh> LoadFromFile(IDirect3DDevice9* device, const char* path);
 
         void Bind(IDirect3DDevice9* device) const;
         void DrawAll(IDirect3DDevice9* device) const;
@@ -27,6 +34,12 @@ namespace Engine
 
     private:
         Mesh() = default;
+        static std::shared_ptr<Mesh> CreateFromData(
+            IDirect3DDevice9* device,
+            const std::vector<Vertex>& vertices,
+            const std::vector<WORD>& indices,
+            std::vector<MeshFaceSpan> faceSpans,
+            float boundingRadius);
 
         IDirect3DVertexBuffer9* vertexBuffer_ = nullptr;
         IDirect3DIndexBuffer9* indexBuffer_ = nullptr;
@@ -34,5 +47,6 @@ namespace Engine
         UINT primitiveCount_ = 0;
         int faceCount_ = 0;
         float boundingRadius_ = 1.7321f;
+        std::vector<MeshFaceSpan> faceSpans_;
     };
 }

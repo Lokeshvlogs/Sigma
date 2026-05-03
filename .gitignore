@@ -4,6 +4,13 @@ bin/
 obj/
 out/
 assets/*
+!assets/static_objects/
+assets/static_objects/*
+!assets/static_objects/wooden_cube.fbx
+!assets/static_objects/wooden_cube_LICENSE.txt
+!assets/textures/
+assets/textures/*
+!assets/textures/wood019_color_1k.png
 !assets/shaders/
 assets/shaders/*
 !assets/shaders/*.hlsl
