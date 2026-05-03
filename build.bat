@@ -7,7 +7,7 @@ rem 2. This script will attempt to initialize the Visual Studio C++ build
 rem    environment (cl.exe) automatically if it's not already available.
 rem    If automatic detection fails, open a Visual Studio x86 Native Tools
 rem    Command Prompt and run: build.bat.
-rem 3. The script copies assets into build\assets; run: build\WoodCube.exe.
+rem 3. The script copies assets into build\assets; run: build\Sigma.exe.
 rem 4. This script targets x86 and uses the DirectX SDK (June 2010) paths below.
 
 set "DXSDK_DIR=C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)"
@@ -120,7 +120,7 @@ for /R src %%f in (*.cpp) do (
 
 cl /nologo /W4 /EHsc /std:c++17 /MD /DWIN32 /D_WINDOWS /DNOMINMAX /I"%DX_INC%" !SOURCES! ^
     /Fo:build\obj\ ^
-    /Fe:build\WoodCube.exe ^
+    /Fe:build\Sigma.exe ^
     /link /LIBPATH:"%DX_LIB%" ^
     /MACHINE:X86 /SUBSYSTEM:WINDOWS ^
     d3d9.lib d3dx9.lib dxguid.lib user32.lib gdi32.lib winmm.lib
@@ -137,8 +137,8 @@ if errorlevel 2 (
 )
 
 echo.
-echo Build succeeded: build\WoodCube.exe
+echo Build succeeded: build\Sigma.exe
 echo Runtime assets copied to: build\assets
-echo Run: build\WoodCube.exe
+echo Run: build\Sigma.exe
 
 endlocal
