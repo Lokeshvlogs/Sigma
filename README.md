@@ -47,4 +47,4 @@ Controls:
 
 `HeartScene` uses the same keyboard and mouse rotation controls and renders the inside and outside heart meshes with a shared `Heart.fx` shader.
 
-The engine uses a component-based object model. A game object is assembled from reusable components such as `TransformComponent`, `SelectionComponent`, `AutoRotateComponent`, `KeyboardRotationComponent`, and `MouseDragRotationComponent`. Scenes own `SceneObject` render entries with material data and ordered render-pass definitions loaded from XML; `RenderManager` renders those passes using shader assets from `assets/shaders`.
+The engine uses a component-based object model. A game object is assembled from reusable components such as `TransformComponent`, `SelectionComponent`, `AutoRotateComponent`, `KeyboardRotationComponent`, and `MouseDragRotationComponent`. Scenes own `SceneObject` render entries with material data and ordered render-pass definitions loaded from XML; each render pass references a shader program asset plus optional technique/pass names, and `RenderManager` renders those passes using shader assets from `assets/shaders`.

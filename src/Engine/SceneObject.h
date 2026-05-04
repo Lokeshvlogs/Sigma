@@ -47,7 +47,9 @@ namespace Engine
     struct RenderPassSettings
     {
         RenderPassPhase phase = RenderPassPhase::Base;
-        std::string pixelShaderPath;
+        std::string shaderProgramPath;
+        std::string techniqueName;
+        std::string passName;
         RenderStateSettings renderStates;
         bool bindMaterialTextures = false;
         RenderPassDrawMode drawMode = RenderPassDrawMode::All;

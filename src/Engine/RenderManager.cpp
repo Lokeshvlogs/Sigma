@@ -246,7 +246,7 @@ namespace Engine
             device->SetTexture(2, nullptr);
         }
 
-        PixelShaderProgram* shader = LoadPixelShader(device, renderPass.pixelShaderPath);
+        PixelShaderProgram* shader = LoadPixelShader(device, renderPass.shaderProgramPath);
         const bool shaderReady = shader != nullptr;
         if (shaderReady)
         {

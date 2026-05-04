@@ -28,8 +28,8 @@
             </Material>
             <Interaction selectionEnabled="true" selectionBoundingRadius="0.0" keyboardRotationSpeed="1.8" mouseDragSensitivity="0.008" />
             <RenderPasses>
-                <RenderPass phase="base" shader="assets\shaders\render_mesh.hlsl" zEnabled="true" zWriteEnabled="true" cullMode="none" alphaBlendEnabled="false" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="face-tints" constant0="tint-color" constant1="none" enabled="true" />
-                <RenderPass phase="overlay" shader="assets\shaders\face_highlight.hlsl" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="false" drawMode="hovered-face" constant0="highlight-color" constant1="none" enabled="true" />
+                <RenderPass phase="base" shaderProgram="assets\shaders\render_mesh.hlsl" technique="RenderMeshTechnique" pass="RenderMeshPass" zEnabled="true" zWriteEnabled="true" cullMode="none" alphaBlendEnabled="false" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="face-tints" constant0="tint-color" constant1="none" enabled="true" />
+                <RenderPass phase="overlay" shaderProgram="assets\shaders\face_highlight.hlsl" technique="FaceHighlightTechnique" pass="FaceHighlightPass" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="false" drawMode="hovered-face" constant0="highlight-color" constant1="none" enabled="true" />
             </RenderPasses>
         </Object>
     </Objects>

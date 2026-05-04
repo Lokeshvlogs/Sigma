@@ -381,9 +381,23 @@ namespace Engine
                         renderPass.renderStates.sourceBlend = ParseBlend(renderPassElement->Attribute("sourceBlend"));
                         renderPass.renderStates.destinationBlend = ParseBlend(renderPassElement->Attribute("destinationBlend"));
 
-                        if (const char* shaderPath = renderPassElement->Attribute("shader"))
+                        if (const char* shaderProgramPath = renderPassElement->Attribute("shaderProgram"))
                         {
-                            renderPass.pixelShaderPath = shaderPath;
+                            renderPass.shaderProgramPath = shaderProgramPath;
+                        }
+                        else if (const char* legacyShaderPath = renderPassElement->Attribute("shader"))
+                        {
+                            renderPass.shaderProgramPath = legacyShaderPath;
+                        }
+
+                        if (const char* techniqueName = renderPassElement->Attribute("technique"))
+                        {
+                            renderPass.techniqueName = techniqueName;
+                        }
+
+                        if (const char* passName = renderPassElement->Attribute("pass"))
+                        {
+                            renderPass.passName = passName;
                         }
 
                         renderPassElement->QueryBoolAttribute("zEnabled", &renderPass.renderStates.zEnabled);
@@ -505,7 +519,9 @@ namespace Engine
             {
                 tinyxml2::XMLElement* renderPassElement = document.NewElement("RenderPass");
                 renderPassElement->SetAttribute("phase", RenderPassPhaseName(renderPass.phase));
-                renderPassElement->SetAttribute("shader", renderPass.pixelShaderPath.c_str());
+                renderPassElement->SetAttribute("shaderProgram", renderPass.shaderProgramPath.c_str());
+                renderPassElement->SetAttribute("technique", renderPass.techniqueName.c_str());
+                renderPassElement->SetAttribute("pass", renderPass.passName.c_str());
                 renderPassElement->SetAttribute("zEnabled", renderPass.renderStates.zEnabled);
                 renderPassElement->SetAttribute("zWriteEnabled", renderPass.renderStates.zWriteEnabled);
                 renderPassElement->SetAttribute("cullMode", CullModeName(renderPass.renderStates.cullMode));

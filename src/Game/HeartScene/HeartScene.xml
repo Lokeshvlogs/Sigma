@@ -21,8 +21,8 @@
             </Material>
             <Interaction selectionEnabled="false" selectionBoundingRadius="0.0" keyboardRotationSpeed="1.2" mouseDragSensitivity="0.006" />
             <RenderPasses>
-                <RenderPass phase="base" shader="assets\shaders\Heart.fx" zEnabled="true" zWriteEnabled="true" cullMode="none" alphaBlendEnabled="false" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="all" constant0="tint-color" constant1="none" enabled="true" />
-                <RenderPass phase="overlay" shader="assets\shaders\HighlightHeart.fx" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="false" drawMode="all" constant0="overlay-color" constant1="overlay-parameters" enabled="true" />
+                <RenderPass phase="base" shaderProgram="assets\shaders\Heart.fx" technique="HeartTechnique" pass="HeartPass" zEnabled="true" zWriteEnabled="true" cullMode="none" alphaBlendEnabled="false" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="all" constant0="tint-color" constant1="none" enabled="true" />
+                <RenderPass phase="overlay" shaderProgram="assets\shaders\HighlightHeart.fx" technique="HighlightHeartTechnique" pass="HighlightHeartPass" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="false" drawMode="all" constant0="overlay-color" constant1="overlay-parameters" enabled="true" />
             </RenderPasses>
         </Object>
         <Object name="Heart Outside" mesh="assets\static_objects\Heart Outside.FBX">
@@ -39,7 +39,7 @@
             </Material>
             <Interaction selectionEnabled="false" selectionBoundingRadius="0.0" keyboardRotationSpeed="1.2" mouseDragSensitivity="0.006" />
             <RenderPasses>
-                <RenderPass phase="base" shader="assets\shaders\Heart.fx" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="all" constant0="tint-color" constant1="none" enabled="true" />
+                <RenderPass phase="base" shaderProgram="assets\shaders\Heart.fx" technique="HeartTechnique" pass="HeartPass" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="all" constant0="tint-color" constant1="none" enabled="true" />
             </RenderPasses>
         </Object>
     </Objects>
