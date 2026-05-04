@@ -1,21 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SceneSettings name="HeartScene">
-    <Window width="2560" height="1369"/>
+    <Window width="2560" height="1369" />
     <Camera>
-        <Eye x="0" y="21" z="563.5"/>
-        <Target x="21" y="87" z="0"/>
-        <Up x="0" y="1" z="0"/>
+        <Eye x="0" y="21" z="563.5" />
+        <Target x="21" y="87" z="0" />
+        <Up x="0" y="1" z="0" />
     </Camera>
     <Objects>
-        <Object name="Heart Inside">
-            <Translation x="0" y="0" z="0"/>
-            <Rotation x="0.0019993829" y="-6.7860236" z="0"/>
-            <Scale x="1" y="1" z="1"/>
+        <Object name="Heart Inside" mesh="assets\static_objects\Heart Inside.FBX">
+            <Translation x="0" y="0" z="0" />
+            <Rotation x="0.0019993829" y="-6.7860236" z="0" />
+            <Scale x="1" y="1" z="1" />
+            <Material diffuseTexture="assets\textures\Heart\heartIN_diffuse.DDS" diffuseFallbackTexture="" normalMap="assets\textures\Heart\heartIN_normal.DDS" bumpMap="assets\bump_maps\Heart\Inner.dds">
+                <DefaultTint r="255" g="255" b="255" a="255" />
+                <SelectedTint r="255" g="255" b="255" a="255" />
+                <HighlightColor x="0.05" y="0.38" z="1.0" w="0.52" />
+                <OverlayColor x="1.0" y="0.35" z="0.15" w="0.6" />
+                <OverlayParameters x="0.0" y="0.0019607844" z="0.0" w="0.0" />
+                <FaceTints />
+            </Material>
+            <Interaction selectionEnabled="false" selectionBoundingRadius="0.0" keyboardRotationSpeed="1.2" mouseDragSensitivity="0.006" />
+            <RenderPasses>
+                <RenderPass phase="base" shader="assets\shaders\Heart.fx" zEnabled="true" zWriteEnabled="true" cullMode="none" alphaBlendEnabled="false" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="all" constant0="tint-color" constant1="none" enabled="true" />
+                <RenderPass phase="overlay" shader="assets\shaders\HighlightHeart.fx" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="false" drawMode="all" constant0="overlay-color" constant1="overlay-parameters" enabled="true" />
+            </RenderPasses>
         </Object>
-        <Object name="Heart Outside">
-            <Translation x="0" y="0" z="0"/>
-            <Rotation x="0.0019993829" y="-6.7860236" z="0"/>
-            <Scale x="1" y="1" z="1"/>
+        <Object name="Heart Outside" mesh="assets\static_objects\Heart Outside.FBX">
+            <Translation x="0" y="0" z="0" />
+            <Rotation x="0.0019993829" y="-6.7860236" z="0" />
+            <Scale x="1" y="1" z="1" />
+            <Material diffuseTexture="assets\textures\Heart\Version2\heart_diffuse_No_AO.DDS" diffuseFallbackTexture="assets\textures\Heart\WetLookOuter.dds" normalMap="assets\textures\Heart\Version2\heart_normal.DDS" bumpMap="assets\bump_maps\Heart\Outer.dds">
+                <DefaultTint r="255" g="255" b="255" a="172" />
+                <SelectedTint r="255" g="255" b="255" a="172" />
+                <HighlightColor x="0.05" y="0.38" z="1.0" w="0.52" />
+                <OverlayColor x="1.0" y="0.35" z="0.15" w="0.6" />
+                <OverlayParameters x="0.0" y="0.0019607844" z="0.0" w="0.0" />
+                <FaceTints />
+            </Material>
+            <Interaction selectionEnabled="false" selectionBoundingRadius="0.0" keyboardRotationSpeed="1.2" mouseDragSensitivity="0.006" />
+            <RenderPasses>
+                <RenderPass phase="base" shader="assets\shaders\Heart.fx" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="all" constant0="tint-color" constant1="none" enabled="true" />
+            </RenderPasses>
         </Object>
     </Objects>
 </SceneSettings>

@@ -37,6 +37,10 @@ namespace Engine
         void Update(float deltaSeconds, GameContext& context);
         const SceneSettings& Settings() const { return settings_; }
 
+    protected:
+        bool LoadSceneObjectsFromSettings(GameContext& context);
+        SceneObject* FindSceneObject(const char* name);
+
     private:
         SceneSettings settings_;
         std::vector<std::unique_ptr<GameObject>> objects_;

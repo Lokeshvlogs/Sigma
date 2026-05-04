@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <SceneSettings name="SampleScene">
     <Window width="1920" height="1080" />
     <Camera>
@@ -7,10 +7,30 @@
         <Up x="0.0" y="1.0" z="0.0" />
     </Camera>
     <Objects>
-        <Object name="Sample Cube">
+        <Object name="Sample Cube" mesh="assets\static_objects\wooden_cube.fbx">
             <Translation x="0.0" y="0.0" z="0.0" />
             <Rotation x="0.35" y="0.0" z="0.0" />
             <Scale x="1.0" y="1.0" z="1.0" />
+            <Material diffuseTexture="assets\textures\wood019_color_1k.png" diffuseFallbackTexture="" normalMap="" bumpMap="">
+                <DefaultTint r="255" g="255" b="255" a="255" />
+                <SelectedTint r="220" g="235" b="255" a="255" />
+                <HighlightColor x="0.05" y="0.38" z="1.0" w="0.52" />
+                <OverlayColor x="1.0" y="0.35" z="0.15" w="0.6" />
+                <OverlayParameters x="0.0" y="0.0019607844" z="0.0" w="0.0" />
+                <FaceTints>
+                    <Tint r="232" g="222" b="204" a="255" />
+                    <Tint r="130" g="124" b="116" a="255" />
+                    <Tint r="168" g="158" b="145" a="255" />
+                    <Tint r="218" g="205" b="185" a="255" />
+                    <Tint r="255" g="245" b="222" a="255" />
+                    <Tint r="112" g="106" b="98" a="255" />
+                </FaceTints>
+            </Material>
+            <Interaction selectionEnabled="true" selectionBoundingRadius="0.0" keyboardRotationSpeed="1.8" mouseDragSensitivity="0.008" />
+            <RenderPasses>
+                <RenderPass phase="base" shader="assets\shaders\render_mesh.hlsl" zEnabled="true" zWriteEnabled="true" cullMode="none" alphaBlendEnabled="false" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="true" drawMode="face-tints" constant0="tint-color" constant1="none" enabled="true" />
+                <RenderPass phase="overlay" shader="assets\shaders\face_highlight.hlsl" zEnabled="true" zWriteEnabled="false" cullMode="none" alphaBlendEnabled="true" sourceBlend="src-alpha" destinationBlend="inv-src-alpha" bindMaterialTextures="false" drawMode="hovered-face" constant0="highlight-color" constant1="none" enabled="true" />
+            </RenderPasses>
         </Object>
     </Objects>
 </SceneSettings>

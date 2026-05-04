@@ -39,16 +39,85 @@ namespace Engine
             return static_cast<float>(value) / 255.0f;
         }
 
-        void SetTintConstant(IDirect3DDevice9* device, D3DCOLOR tint)
+        D3DCOLOR ResolveTintColor(const SceneObject& sceneObject, int faceIndex)
         {
-            const float color[] =
+            if (sceneObject.selected)
             {
-                ColorChannel(Red(tint)),
-                ColorChannel(Green(tint)),
-                ColorChannel(Blue(tint)),
-                ColorChannel(Alpha(tint))
-            };
-            device->SetPixelShaderConstantF(0, color, 1);
+                return sceneObject.material.selectedTint;
+            }
+
+            if (faceIndex >= 0 && faceIndex < static_cast<int>(sceneObject.material.faceTints.size()))
+            {
+                return sceneObject.material.faceTints[faceIndex];
+            }
+
+            return sceneObject.material.defaultTint;
+        }
+
+        void ApplyPixelShaderConstant(
+            IDirect3DDevice9* device,
+            const SceneObject& sceneObject,
+            PixelShaderConstantSource source,
+            UINT registerIndex,
+            bool shaderReady,
+            D3DCOLOR tintColor)
+        {
+            switch (source)
+            {
+            case PixelShaderConstantSource::TintColor:
+                if (shaderReady)
+                {
+                    const float color[] =
+                    {
+                        ColorChannel(Red(tintColor)),
+                        ColorChannel(Green(tintColor)),
+                        ColorChannel(Blue(tintColor)),
+                        ColorChannel(Alpha(tintColor))
+                    };
+                    device->SetPixelShaderConstantF(registerIndex, color, 1);
+                }
+                else if (registerIndex == 0)
+                {
+                    device->SetRenderState(D3DRS_TEXTUREFACTOR, tintColor);
+                }
+                break;
+
+            case PixelShaderConstantSource::HighlightColor:
+                if (shaderReady)
+                {
+                    device->SetPixelShaderConstantF(registerIndex, sceneObject.material.highlightColor.data(), 1);
+                }
+                break;
+
+            case PixelShaderConstantSource::OverlayColor:
+                if (shaderReady)
+                {
+                    device->SetPixelShaderConstantF(registerIndex, sceneObject.material.overlayColor.data(), 1);
+                }
+                break;
+
+            case PixelShaderConstantSource::OverlayParameters:
+                if (shaderReady)
+                {
+                    device->SetPixelShaderConstantF(registerIndex, sceneObject.material.overlayParameters.data(), 1);
+                }
+                break;
+
+            case PixelShaderConstantSource::None:
+            default:
+                break;
+            }
+        }
+
+        void ApplyPassConstants(
+            IDirect3DDevice9* device,
+            const SceneObject& sceneObject,
+            const RenderPassSettings& renderPass,
+            bool shaderReady,
+            D3DCOLOR tintColor)
+        {
+            ApplyPixelShaderConstant(device, sceneObject, renderPass.constant0Source, 0, shaderReady, tintColor);
+            ApplyPixelShaderConstant(device, sceneObject, renderPass.constant1Source, 1, shaderReady, tintColor);
         }
     }
 
@@ -67,23 +136,34 @@ namespace Engine
 
     void RenderManager::Render(GameContext& context)
     {
-        for (Scene* scene : scenes_)
+        for (int phaseValue = static_cast<int>(RenderPassPhase::Base);
+            phaseValue <= static_cast<int>(RenderPassPhase::Overlay);
+            ++phaseValue)
         {
-            if (!scene)
+            const RenderPassPhase phase = static_cast<RenderPassPhase>(phaseValue);
+            for (Scene* scene : scenes_)
             {
-                continue;
-            }
+                if (!scene)
+                {
+                    continue;
+                }
 
-            for (auto& sceneObject : scene->SceneObjects())
-            {
-                RenderSceneObjectBasePass(*sceneObject, context.renderer);
-            }
-
-            for (auto& sceneObject : scene->SceneObjects())
-            {
-                RenderSceneObjectOverlayPasses(*sceneObject, context.renderer);
+                for (auto& sceneObject : scene->SceneObjects())
+                {
+                    RenderSceneObject(*sceneObject, context.renderer, phase);
+                }
             }
         }
+    }
+
+    void RenderManager::ClearBoundResources(IDirect3DDevice9* device)
+    {
+        device->SetPixelShader(nullptr);
+        device->SetTexture(0, nullptr);
+        device->SetTexture(1, nullptr);
+        device->SetTexture(2, nullptr);
+        device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+        device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
     }
 
     PixelShaderProgram* RenderManager::LoadPixelShader(IDirect3DDevice9* device, const std::string& assetPath)
@@ -110,9 +190,9 @@ namespace Engine
         return shaderPointer->IsReady() ? shaderPointer : nullptr;
     }
 
-    void RenderManager::RenderSceneObjectBasePass(SceneObject& sceneObject, Direct3DRenderer& renderer)
+    void RenderManager::RenderSceneObject(SceneObject& sceneObject, Direct3DRenderer& renderer, RenderPassPhase phase)
     {
-        if (!sceneObject.gameObject || !sceneObject.gameObject->IsActive() || !sceneObject.mesh)
+        if (!sceneObject.gameObject || !sceneObject.gameObject->IsActive() || !sceneObject.mesh || sceneObject.renderPasses.empty())
         {
             return;
         }
@@ -128,148 +208,86 @@ namespace Engine
         device->SetTransform(D3DTS_WORLD, &world);
         sceneObject.mesh->Bind(device);
 
-        ApplyRenderStates(sceneObject, device);
-        RenderBasePass(sceneObject, device);
+        for (const RenderPassSettings& renderPass : sceneObject.renderPasses)
+        {
+            if (renderPass.phase == phase)
+            {
+                RenderPass(sceneObject, renderPass, device);
+            }
+        }
 
-        device->SetPixelShader(nullptr);
-        device->SetTexture(0, nullptr);
-        device->SetTexture(1, nullptr);
-        device->SetTexture(2, nullptr);
-        device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-        device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
+        ClearBoundResources(device);
     }
 
-    void RenderManager::RenderSceneObjectOverlayPasses(SceneObject& sceneObject, Direct3DRenderer& renderer)
+    void RenderManager::RenderPass(SceneObject& sceneObject, const RenderPassSettings& renderPass, IDirect3DDevice9* device)
     {
-        if (!sceneObject.gameObject || !sceneObject.gameObject->IsActive() || !sceneObject.mesh)
+        if (!renderPass.enabled)
         {
             return;
         }
 
-        auto* transform = sceneObject.gameObject->GetComponent<TransformComponent>();
-        if (!transform)
+        if (renderPass.drawMode == RenderPassDrawMode::HoveredFace &&
+            (sceneObject.hoveredFaceIndex < 0 || sceneObject.hoveredFaceIndex >= sceneObject.mesh->FaceCount()))
         {
             return;
         }
 
-        IDirect3DDevice9* device = renderer.Device();
-        D3DXMATRIX world = transform->WorldMatrix();
-        device->SetTransform(D3DTS_WORLD, &world);
-        sceneObject.mesh->Bind(device);
+        ApplyRenderStates(renderPass.renderStates, device);
+        if (renderPass.bindMaterialTextures)
+        {
+            device->SetTexture(0, sceneObject.material.diffuseTexture ? sceneObject.material.diffuseTexture->Native() : nullptr);
+            device->SetTexture(1, sceneObject.material.normalMap ? sceneObject.material.normalMap->Native() : nullptr);
+            device->SetTexture(2, sceneObject.material.bumpMap ? sceneObject.material.bumpMap->Native() : nullptr);
+        }
+        else
+        {
+            device->SetTexture(0, nullptr);
+            device->SetTexture(1, nullptr);
+            device->SetTexture(2, nullptr);
+        }
 
-        RenderOverlayPass(sceneObject, device);
-        RenderHighlightPass(sceneObject, device);
-
-        device->SetPixelShader(nullptr);
-        device->SetTexture(0, nullptr);
-        device->SetTexture(1, nullptr);
-        device->SetTexture(2, nullptr);
-        device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-        device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
-    }
-
-    void RenderManager::RenderBasePass(SceneObject& sceneObject, IDirect3DDevice9* device)
-    {
-        PixelShaderProgram* shader = LoadPixelShader(device, sceneObject.material.pixelShaderPath);
-        if (shader)
+        PixelShaderProgram* shader = LoadPixelShader(device, renderPass.pixelShaderPath);
+        const bool shaderReady = shader != nullptr;
+        if (shaderReady)
         {
             shader->Apply(device);
         }
+        else
+        {
+            device->SetPixelShader(nullptr);
+        }
 
-        device->SetTexture(0, sceneObject.material.diffuseTexture ? sceneObject.material.diffuseTexture->Native() : nullptr);
-        device->SetTexture(1, sceneObject.material.normalMap ? sceneObject.material.normalMap->Native() : nullptr);
-        device->SetTexture(2, sceneObject.material.bumpMap ? sceneObject.material.bumpMap->Native() : nullptr);
-
-        if (static_cast<int>(sceneObject.material.faceTints.size()) == sceneObject.mesh->FaceCount())
+        if (renderPass.drawMode == RenderPassDrawMode::FaceTints &&
+            static_cast<int>(sceneObject.material.faceTints.size()) == sceneObject.mesh->FaceCount())
         {
             for (int face = 0; face < sceneObject.mesh->FaceCount(); ++face)
             {
-                D3DCOLOR tint = sceneObject.selected ? sceneObject.material.selectedTint : sceneObject.material.faceTints[face];
-                if (shader)
-                {
-                    SetTintConstant(device, tint);
-                }
-                else
-                {
-                    device->SetRenderState(D3DRS_TEXTUREFACTOR, tint);
-                }
+                const D3DCOLOR tint = ResolveTintColor(sceneObject, face);
+                ApplyPassConstants(device, sceneObject, renderPass, shaderReady, tint);
                 sceneObject.mesh->DrawFace(device, face);
             }
             return;
         }
 
-        D3DCOLOR tint = sceneObject.selected ? sceneObject.material.selectedTint : sceneObject.material.defaultTint;
-        if (shader)
+        const D3DCOLOR tint = ResolveTintColor(sceneObject, -1);
+        ApplyPassConstants(device, sceneObject, renderPass, shaderReady, tint);
+
+        if (renderPass.drawMode == RenderPassDrawMode::HoveredFace)
         {
-            SetTintConstant(device, tint);
+            sceneObject.mesh->DrawFace(device, sceneObject.hoveredFaceIndex);
+            return;
         }
-        else
-        {
-            device->SetRenderState(D3DRS_TEXTUREFACTOR, tint);
-        }
+
         sceneObject.mesh->DrawAll(device);
     }
 
-    void RenderManager::RenderHighlightPass(SceneObject& sceneObject, IDirect3DDevice9* device)
+    void RenderManager::ApplyRenderStates(const RenderStateSettings& renderStates, IDirect3DDevice9* device)
     {
-        if (sceneObject.hoveredFaceIndex < 0 || sceneObject.hoveredFaceIndex >= sceneObject.mesh->FaceCount())
-        {
-            return;
-        }
-
-        PixelShaderProgram* shader = LoadPixelShader(device, sceneObject.material.highlightPixelShaderPath);
-        if (!shader)
-        {
-            return;
-        }
-
-        device->SetTexture(0, nullptr);
-        device->SetTexture(1, nullptr);
-        device->SetTexture(2, nullptr);
-        device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-        device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-        device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-        device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-        shader->Apply(device);
-        device->SetPixelShaderConstantF(0, sceneObject.material.highlightColor, 1);
-        sceneObject.mesh->DrawFace(device, sceneObject.hoveredFaceIndex);
-    }
-
-    void RenderManager::RenderOverlayPass(SceneObject& sceneObject, IDirect3DDevice9* device)
-    {
-        if (!sceneObject.material.overlayEnabled || sceneObject.material.overlayPixelShaderPath.empty())
-        {
-            return;
-        }
-
-        PixelShaderProgram* shader = LoadPixelShader(device, sceneObject.material.overlayPixelShaderPath);
-        if (!shader)
-        {
-            return;
-        }
-
-        device->SetTexture(0, nullptr);
-        device->SetTexture(1, nullptr);
-        device->SetTexture(2, nullptr);
-        device->SetRenderState(D3DRS_ZENABLE, TRUE);
-        device->SetRenderState(D3DRS_CULLMODE, sceneObject.renderStates.cullMode);
-        device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-        device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-        device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-        device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-        shader->Apply(device);
-        device->SetPixelShaderConstantF(0, sceneObject.material.overlayColor, 1);
-        device->SetPixelShaderConstantF(1, sceneObject.material.overlayParameters, 1);
-        sceneObject.mesh->DrawAll(device);
-    }
-
-    void RenderManager::ApplyRenderStates(const SceneObject& sceneObject, IDirect3DDevice9* device)
-    {
-        device->SetRenderState(D3DRS_ZENABLE, sceneObject.renderStates.zEnabled ? TRUE : FALSE);
-        device->SetRenderState(D3DRS_ZWRITEENABLE, sceneObject.renderStates.zWriteEnabled ? TRUE : FALSE);
-        device->SetRenderState(D3DRS_CULLMODE, sceneObject.renderStates.cullMode);
-        device->SetRenderState(D3DRS_ALPHABLENDENABLE, sceneObject.renderStates.alphaBlendEnabled ? TRUE : FALSE);
-        device->SetRenderState(D3DRS_SRCBLEND, sceneObject.renderStates.sourceBlend);
-        device->SetRenderState(D3DRS_DESTBLEND, sceneObject.renderStates.destinationBlend);
+        device->SetRenderState(D3DRS_ZENABLE, renderStates.zEnabled ? TRUE : FALSE);
+        device->SetRenderState(D3DRS_ZWRITEENABLE, renderStates.zWriteEnabled ? TRUE : FALSE);
+        device->SetRenderState(D3DRS_CULLMODE, renderStates.cullMode);
+        device->SetRenderState(D3DRS_ALPHABLENDENABLE, renderStates.alphaBlendEnabled ? TRUE : FALSE);
+        device->SetRenderState(D3DRS_SRCBLEND, renderStates.sourceBlend);
+        device->SetRenderState(D3DRS_DESTBLEND, renderStates.destinationBlend);
     }
 }

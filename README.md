@@ -41,9 +41,10 @@ Controls:
 - Left-drag the selected cube to rotate it with the mouse.
 - `Esc` quits.
 - The on-screen Dear ImGui transform panel lets you pick a scene object from a dropdown and adjust translation, rotation, scale, eye, target, and up-vector values at runtime.
-- Each scene also has an XML settings file under `src/Game/<SceneName>/<SceneName>.xml`; the panel's `Save to XML` button persists the current window size, camera, and scene-object transforms back into that file for the next launch.
+- Each scene also has an XML settings file under `src/Game/<SceneName>/<SceneName>.xml`; scenes are now data-driven from that XML, including window/camera defaults, scene objects, asset paths, material settings, interaction settings, and render-pass definitions.
+- The panel's `Save to XML` button persists the current window size, camera, scene-object transforms, and runtime-updated material values back into that file for the next launch.
 - `HeartScene` also exposes `Red Channel ID`, `Highlight Color`, and `Hover-driven highlight` controls in the ImGui panel, and uses a second `HighlightHeart.fx` pass to overlay matching inner-heart regions encoded in the mesh vertex-color red channel.
 
 `HeartScene` uses the same keyboard and mouse rotation controls and renders the inside and outside heart meshes with a shared `Heart.fx` shader.
 
-The engine uses a component-based object model. A game object is assembled from reusable components such as `TransformComponent`, `SelectionComponent`, `AutoRotateComponent`, `KeyboardRotationComponent`, and `MouseDragRotationComponent`. Scenes own `SceneObject` render entries with material data and render states; `RenderManager` renders registered scenes using shader passes loaded from `assets/shaders`.
+The engine uses a component-based object model. A game object is assembled from reusable components such as `TransformComponent`, `SelectionComponent`, `AutoRotateComponent`, `KeyboardRotationComponent`, and `MouseDragRotationComponent`. Scenes own `SceneObject` render entries with material data and ordered render-pass definitions loaded from XML; `RenderManager` renders those passes using shader assets from `assets/shaders`.

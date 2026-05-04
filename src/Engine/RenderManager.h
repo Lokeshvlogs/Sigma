@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SceneObject.h"
 #include "ShaderProgram.h"
 
 #include <map>
@@ -12,7 +13,6 @@ namespace Engine
     class Direct3DRenderer;
     class Scene;
     struct GameContext;
-    struct SceneObject;
 
     class RenderManager
     {
@@ -22,13 +22,11 @@ namespace Engine
         void Render(GameContext& context);
 
     private:
+        void ClearBoundResources(IDirect3DDevice9* device);
         PixelShaderProgram* LoadPixelShader(IDirect3DDevice9* device, const std::string& assetPath);
-        void RenderSceneObjectBasePass(SceneObject& sceneObject, Direct3DRenderer& renderer);
-        void RenderSceneObjectOverlayPasses(SceneObject& sceneObject, Direct3DRenderer& renderer);
-        void RenderBasePass(SceneObject& sceneObject, IDirect3DDevice9* device);
-        void RenderHighlightPass(SceneObject& sceneObject, IDirect3DDevice9* device);
-        void RenderOverlayPass(SceneObject& sceneObject, IDirect3DDevice9* device);
-        void ApplyRenderStates(const SceneObject& sceneObject, IDirect3DDevice9* device);
+        void RenderSceneObject(SceneObject& sceneObject, Direct3DRenderer& renderer, RenderPassPhase phase);
+        void RenderPass(SceneObject& sceneObject, const RenderPassSettings& renderPass, IDirect3DDevice9* device);
+        void ApplyRenderStates(const RenderStateSettings& renderStates, IDirect3DDevice9* device);
 
         std::vector<Scene*> scenes_;
         std::map<std::string, std::unique_ptr<PixelShaderProgram>> pixelShaders_;
