@@ -3,6 +3,8 @@
 #include "Vertex.h"
 
 #include <d3d9.h>
+#include <d3dx9.h>
+#include <cfloat>
 #include <memory>
 #include <string>
 #include <vector>
@@ -13,6 +15,14 @@ namespace Engine
     {
         UINT startIndex = 0;
         UINT primitiveCount = 0;
+    };
+
+    struct MeshRaycastHit
+    {
+        int faceIndex = -1;
+        float distance = FLT_MAX;
+        D3DXVECTOR3 position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+        D3DCOLOR vertexColor = D3DCOLOR_ARGB(255, 255, 255, 255);
     };
 
     class Mesh
@@ -28,6 +38,7 @@ namespace Engine
         void Bind(IDirect3DDevice9* device) const;
         void DrawAll(IDirect3DDevice9* device) const;
         void DrawFace(IDirect3DDevice9* device, int faceIndex) const;
+        bool Raycast(const D3DXVECTOR3& localStart, const D3DXVECTOR3& localDirection, MeshRaycastHit& hit) const;
 
         int FaceCount() const { return faceCount_; }
         float BoundingRadius() const { return boundingRadius_; }
@@ -55,6 +66,8 @@ namespace Engine
         UINT primitiveCount_ = 0;
         int faceCount_ = 0;
         float boundingRadius_ = 1.7321f;
+        std::vector<Vertex> vertices_;
+        std::vector<DWORD> indices_;
         std::vector<MeshFaceSpan> faceSpans_;
     };
 }

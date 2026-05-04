@@ -76,7 +76,12 @@ namespace Engine
 
             for (auto& sceneObject : scene->SceneObjects())
             {
-                RenderSceneObject(*sceneObject, context.renderer);
+                RenderSceneObjectBasePass(*sceneObject, context.renderer);
+            }
+
+            for (auto& sceneObject : scene->SceneObjects())
+            {
+                RenderSceneObjectOverlayPasses(*sceneObject, context.renderer);
             }
         }
     }
@@ -105,7 +110,7 @@ namespace Engine
         return shaderPointer->IsReady() ? shaderPointer : nullptr;
     }
 
-    void RenderManager::RenderSceneObject(SceneObject& sceneObject, Direct3DRenderer& renderer)
+    void RenderManager::RenderSceneObjectBasePass(SceneObject& sceneObject, Direct3DRenderer& renderer)
     {
         if (!sceneObject.gameObject || !sceneObject.gameObject->IsActive() || !sceneObject.mesh)
         {
@@ -125,6 +130,34 @@ namespace Engine
 
         ApplyRenderStates(sceneObject, device);
         RenderBasePass(sceneObject, device);
+
+        device->SetPixelShader(nullptr);
+        device->SetTexture(0, nullptr);
+        device->SetTexture(1, nullptr);
+        device->SetTexture(2, nullptr);
+        device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+        device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
+    }
+
+    void RenderManager::RenderSceneObjectOverlayPasses(SceneObject& sceneObject, Direct3DRenderer& renderer)
+    {
+        if (!sceneObject.gameObject || !sceneObject.gameObject->IsActive() || !sceneObject.mesh)
+        {
+            return;
+        }
+
+        auto* transform = sceneObject.gameObject->GetComponent<TransformComponent>();
+        if (!transform)
+        {
+            return;
+        }
+
+        IDirect3DDevice9* device = renderer.Device();
+        D3DXMATRIX world = transform->WorldMatrix();
+        device->SetTransform(D3DTS_WORLD, &world);
+        sceneObject.mesh->Bind(device);
+
+        RenderOverlayPass(sceneObject, device);
         RenderHighlightPass(sceneObject, device);
 
         device->SetPixelShader(nullptr);
@@ -200,6 +233,34 @@ namespace Engine
         shader->Apply(device);
         device->SetPixelShaderConstantF(0, sceneObject.material.highlightColor, 1);
         sceneObject.mesh->DrawFace(device, sceneObject.hoveredFaceIndex);
+    }
+
+    void RenderManager::RenderOverlayPass(SceneObject& sceneObject, IDirect3DDevice9* device)
+    {
+        if (!sceneObject.material.overlayEnabled || sceneObject.material.overlayPixelShaderPath.empty())
+        {
+            return;
+        }
+
+        PixelShaderProgram* shader = LoadPixelShader(device, sceneObject.material.overlayPixelShaderPath);
+        if (!shader)
+        {
+            return;
+        }
+
+        device->SetTexture(0, nullptr);
+        device->SetTexture(1, nullptr);
+        device->SetTexture(2, nullptr);
+        device->SetRenderState(D3DRS_ZENABLE, TRUE);
+        device->SetRenderState(D3DRS_CULLMODE, sceneObject.renderStates.cullMode);
+        device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+        device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+        device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+        device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+        shader->Apply(device);
+        device->SetPixelShaderConstantF(0, sceneObject.material.overlayColor, 1);
+        device->SetPixelShaderConstantF(1, sceneObject.material.overlayParameters, 1);
+        sceneObject.mesh->DrawAll(device);
     }
 
     void RenderManager::ApplyRenderStates(const SceneObject& sceneObject, IDirect3DDevice9* device)

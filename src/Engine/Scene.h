@@ -21,6 +21,8 @@ namespace Engine
         virtual const char* SceneName() const = 0;
         virtual const char* SettingsFilePath() const = 0;
         virtual bool Load(GameContext& context) = 0;
+        virtual void RenderImGuiControls() {}
+        virtual void OnUpdate(float, GameContext&) {}
         virtual void Unload() {}
 
         bool LoadSettingsFromFile();

@@ -23,9 +23,11 @@ namespace Engine
 
     private:
         PixelShaderProgram* LoadPixelShader(IDirect3DDevice9* device, const std::string& assetPath);
-        void RenderSceneObject(SceneObject& sceneObject, Direct3DRenderer& renderer);
+        void RenderSceneObjectBasePass(SceneObject& sceneObject, Direct3DRenderer& renderer);
+        void RenderSceneObjectOverlayPasses(SceneObject& sceneObject, Direct3DRenderer& renderer);
         void RenderBasePass(SceneObject& sceneObject, IDirect3DDevice9* device);
         void RenderHighlightPass(SceneObject& sceneObject, IDirect3DDevice9* device);
+        void RenderOverlayPass(SceneObject& sceneObject, IDirect3DDevice9* device);
         void ApplyRenderStates(const SceneObject& sceneObject, IDirect3DDevice9* device);
 
         std::vector<Scene*> scenes_;

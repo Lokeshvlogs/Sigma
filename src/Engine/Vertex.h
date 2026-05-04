@@ -9,9 +9,10 @@ namespace Engine
         float x;
         float y;
         float z;
+        D3DCOLOR color;
         float u;
         float v;
 
-        enum { FVF = D3DFVF_XYZ | D3DFVF_TEX1 };
+        enum { FVF = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
     };
 }

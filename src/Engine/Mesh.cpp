@@ -9,11 +9,93 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <cfloat>
 
 namespace Engine
 {
     namespace
     {
+        bool IntersectTriangle(
+            const D3DXVECTOR3& rayStart,
+            const D3DXVECTOR3& rayDirection,
+            const D3DXVECTOR3& vertex0,
+            const D3DXVECTOR3& vertex1,
+            const D3DXVECTOR3& vertex2,
+            float& distance,
+            D3DXVECTOR3& position)
+        {
+            const float epsilon = 0.000001f;
+
+            const D3DXVECTOR3 edge1 = vertex1 - vertex0;
+            const D3DXVECTOR3 edge2 = vertex2 - vertex0;
+
+            D3DXVECTOR3 p;
+            D3DXVec3Cross(&p, &rayDirection, &edge2);
+            const float determinant = D3DXVec3Dot(&edge1, &p);
+            if (fabsf(determinant) < epsilon)
+            {
+                return false;
+            }
+
+            const float inverseDeterminant = 1.0f / determinant;
+            const D3DXVECTOR3 t = rayStart - vertex0;
+            const float u = D3DXVec3Dot(&t, &p) * inverseDeterminant;
+            if (u < 0.0f || u > 1.0f)
+            {
+                return false;
+            }
+
+            D3DXVECTOR3 q;
+            D3DXVec3Cross(&q, &t, &edge1);
+            const float v = D3DXVec3Dot(&rayDirection, &q) * inverseDeterminant;
+            if (v < 0.0f || u + v > 1.0f)
+            {
+                return false;
+            }
+
+            distance = D3DXVec3Dot(&edge2, &q) * inverseDeterminant;
+            if (distance < 0.0f)
+            {
+                return false;
+            }
+
+            position = rayStart + rayDirection * distance;
+            return true;
+        }
+
+        const Vertex& ClosestTriangleVertex(
+            const std::vector<Vertex>& vertices,
+            DWORD index0,
+            DWORD index1,
+            DWORD index2,
+            const D3DXVECTOR3& position)
+        {
+            const Vertex* closest = &vertices[index0];
+            float closestDistance = FLT_MAX;
+
+            const DWORD indices[] = { index0, index1, index2 };
+            for (DWORD index : indices)
+            {
+                const Vertex& vertex = vertices[index];
+                const D3DXVECTOR3 vertexPosition(vertex.x, vertex.y, vertex.z);
+                const D3DXVECTOR3 delta = vertexPosition - position;
+                const float distance = D3DXVec3LengthSq(&delta);
+                if (distance < closestDistance)
+                {
+                    closest = &vertex;
+                    closestDistance = distance;
+                }
+            }
+
+            return *closest;
+        }
+
+        int ColorComponent(float value)
+        {
+            const float clamped = std::max(0.0f, std::min(1.0f, value));
+            return static_cast<int>(clamped * 255.0f + 0.5f);
+        }
+
         void AppendMeshData(
             const aiMesh& sourceMesh,
             std::vector<Vertex>& vertices,
@@ -31,11 +113,23 @@ namespace Engine
                     uv = sourceMesh.mTextureCoords[0][vertexIndex];
                 }
 
+                D3DCOLOR color = D3DCOLOR_ARGB(255, 255, 255, 255);
+                if (sourceMesh.HasVertexColors(0))
+                {
+                    const aiColor4D& vertexColor = sourceMesh.mColors[0][vertexIndex];
+                    color = D3DCOLOR_ARGB(
+                        ColorComponent(vertexColor.a),
+                        ColorComponent(vertexColor.r),
+                        ColorComponent(vertexColor.g),
+                        ColorComponent(vertexColor.b));
+                }
+
                 vertices.push_back(
                     {
                         position.x,
                         position.y,
                         position.z,
+                        color,
                         uv.x,
                         uv.y
                     });
@@ -190,6 +284,8 @@ namespace Engine
         mesh->primitiveCount_ = static_cast<UINT>(indices.size() / 3);
         mesh->faceCount_ = static_cast<int>(faceSpans.size());
         mesh->boundingRadius_ = boundingRadius > 0.0f ? boundingRadius : 1.0f;
+        mesh->vertices_ = vertices;
+        mesh->indices_.assign(indices.begin(), indices.end());
         mesh->faceSpans_ = std::move(faceSpans);
         return mesh;
     }
@@ -244,6 +340,8 @@ namespace Engine
         mesh->primitiveCount_ = static_cast<UINT>(indices.size() / 3);
         mesh->faceCount_ = static_cast<int>(faceSpans.size());
         mesh->boundingRadius_ = boundingRadius > 0.0f ? boundingRadius : 1.0f;
+        mesh->vertices_ = vertices;
+        mesh->indices_ = indices;
         mesh->faceSpans_ = std::move(faceSpans);
         return mesh;
     }
@@ -269,5 +367,61 @@ namespace Engine
 
         const MeshFaceSpan& span = faceSpans_[faceIndex];
         device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, vertexCount_, span.startIndex, span.primitiveCount);
+    }
+
+    bool Mesh::Raycast(const D3DXVECTOR3& localStart, const D3DXVECTOR3& localDirection, MeshRaycastHit& hit) const
+    {
+        hit = MeshRaycastHit{};
+        if (vertices_.empty() || indices_.empty() || faceSpans_.empty())
+        {
+            return false;
+        }
+
+        bool foundHit = false;
+        for (int faceIndex = 0; faceIndex < static_cast<int>(faceSpans_.size()); ++faceIndex)
+        {
+            const MeshFaceSpan& span = faceSpans_[faceIndex];
+            for (UINT primitive = 0; primitive < span.primitiveCount; ++primitive)
+            {
+                const UINT startIndex = span.startIndex + primitive * 3;
+                if (startIndex + 2 >= indices_.size())
+                {
+                    continue;
+                }
+
+                const DWORD index0 = indices_[startIndex];
+                const DWORD index1 = indices_[startIndex + 1];
+                const DWORD index2 = indices_[startIndex + 2];
+                if (index0 >= vertices_.size() || index1 >= vertices_.size() || index2 >= vertices_.size())
+                {
+                    continue;
+                }
+
+                const D3DXVECTOR3 vertex0(vertices_[index0].x, vertices_[index0].y, vertices_[index0].z);
+                const D3DXVECTOR3 vertex1(vertices_[index1].x, vertices_[index1].y, vertices_[index1].z);
+                const D3DXVECTOR3 vertex2(vertices_[index2].x, vertices_[index2].y, vertices_[index2].z);
+
+                float distance = 0.0f;
+                D3DXVECTOR3 position;
+                if (!IntersectTriangle(localStart, localDirection, vertex0, vertex1, vertex2, distance, position))
+                {
+                    continue;
+                }
+
+                if (distance >= hit.distance)
+                {
+                    continue;
+                }
+
+                const Vertex& closestVertex = ClosestTriangleVertex(vertices_, index0, index1, index2, position);
+                hit.faceIndex = faceIndex;
+                hit.distance = distance;
+                hit.position = position;
+                hit.vertexColor = closestVertex.color;
+                foundHit = true;
+            }
+        }
+
+        return foundHit;
     }
 }

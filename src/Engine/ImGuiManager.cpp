@@ -203,6 +203,8 @@ namespace Engine
                 renderer.SetCameraTransform(eye, target, up);
             }
 
+            scene.RenderImGuiControls();
+
             if (ImGui::Button("Save to XML"))
             {
                 RECT client = {};

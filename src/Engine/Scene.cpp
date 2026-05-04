@@ -139,5 +139,7 @@ namespace Engine
         {
             object->Update(deltaSeconds, context);
         }
+
+        OnUpdate(deltaSeconds, context);
     }
 }

@@ -42,6 +42,7 @@ Controls:
 - `Esc` quits.
 - The on-screen Dear ImGui transform panel lets you pick a scene object from a dropdown and adjust translation, rotation, scale, eye, target, and up-vector values at runtime.
 - Each scene also has an XML settings file under `src/Game/<SceneName>/<SceneName>.xml`; the panel's `Save to XML` button persists the current window size, camera, and scene-object transforms back into that file for the next launch.
+- `HeartScene` also exposes `Red Channel ID`, `Highlight Color`, and `Hover-driven highlight` controls in the ImGui panel, and uses a second `HighlightHeart.fx` pass to overlay matching inner-heart regions encoded in the mesh vertex-color red channel.
 
 `HeartScene` uses the same keyboard and mouse rotation controls and renders the inside and outside heart meshes with a shared `Heart.fx` shader.
 
