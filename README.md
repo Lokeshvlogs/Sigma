@@ -40,6 +40,8 @@ Controls:
 - Hover a cube face to highlight it with a blue shader pass.
 - Left-drag the selected cube to rotate it with the mouse.
 - `Esc` quits.
+- The on-screen Dear ImGui transform panel lets you pick a scene object from a dropdown and adjust translation, rotation, scale, eye, target, and up-vector values at runtime.
+- Each scene also has an XML settings file under `src/Game/<SceneName>/<SceneName>.xml`; the panel's `Save to XML` button persists the current window size, camera, and scene-object transforms back into that file for the next launch.
 
 `HeartScene` uses the same keyboard and mouse rotation controls and renders the inside and outside heart meshes with a shared `Heart.fx` shader.
 

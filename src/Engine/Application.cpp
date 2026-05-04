@@ -8,8 +8,6 @@ namespace Engine
 {
     namespace
     {
-        const int kClientWidth = 1920;
-        const int kClientHeight = 1080;
         const char* kWindowClassName = "SigmaD3D9GameWindow";
     }
 
@@ -21,16 +19,27 @@ namespace Engine
 
     int Application::Run(std::unique_ptr<Scene> scene)
     {
+        activeScene_ = scene.get();
+        scene->LoadSettingsFromFile();
+        clientWidth_ = scene->Settings().windowWidth > 0 ? scene->Settings().windowWidth : 1920;
+        clientHeight_ = scene->Settings().windowHeight > 0 ? scene->Settings().windowHeight : 1080;
+
         if (!CreateMainWindow())
         {
             ShowFatalError("Could not create the Win32 window.");
             return 1;
         }
 
-        HRESULT hr = renderer_.Initialize(hwnd_, kClientWidth, kClientHeight);
+        HRESULT hr = renderer_.Initialize(hwnd_, clientWidth_, clientHeight_);
         if (FAILED(hr))
         {
             ShowFatalError("Could not initialize Direct3D 9.", hr);
+            return 1;
+        }
+
+        if (!imgui_.Initialize(hwnd_, renderer_.Device()))
+        {
+            ShowFatalError("Could not initialize Dear ImGui.");
             return 1;
         }
 
@@ -38,9 +47,12 @@ namespace Engine
         if (!scene->Load(context))
         {
             ShowFatalError("Could not load the game scene.");
+            imgui_.Shutdown();
             return 1;
         }
+
         scene->Start();
+        scene->ApplyLoadedSettings(renderer_);
         renderManager_.ClearScenes();
         renderManager_.AddScene(*scene);
 
@@ -79,8 +91,12 @@ namespace Engine
                 deltaSeconds = 0.1f;
             }
 
+            imgui_.BeginFrame();
+            context.uiWantsKeyboard = imgui_.WantsKeyboardCapture();
+            context.uiWantsMouse = imgui_.WantsMouseCapture();
+
             context.requestQuit = false;
-            if (input_.WasKeyPressed(VK_ESCAPE))
+            if (!context.uiWantsKeyboard && input_.WasKeyPressed(VK_ESCAPE))
             {
                 context.requestQuit = true;
             }
@@ -88,6 +104,7 @@ namespace Engine
             scene->Update(deltaSeconds, context);
             if (context.requestQuit)
             {
+                imgui_.EndFrame();
                 PostQuitMessage(0);
                 continue;
             }
@@ -101,17 +118,40 @@ namespace Engine
                 fpsFrames_ = 0;
             }
 
-            if (renderer_.PrepareFrame())
+            HRESULT deviceState = renderer_.DeviceCooperativeLevel();
+            if (deviceState == D3DERR_DEVICELOST)
             {
-                if (renderer_.BeginFrame(D3DCOLOR_XRGB(32, 36, 42)))
+                imgui_.EndFrame();
+                Sleep(20);
+                continue;
+            }
+
+            if (deviceState == D3DERR_DEVICENOTRESET)
+            {
+                imgui_.InvalidateDeviceObjects();
+                if (FAILED(renderer_.Reset()))
                 {
-                    renderManager_.Render(context);
-                    renderer_.EndFrame();
+                    imgui_.EndFrame();
+                    continue;
                 }
+                imgui_.CreateDeviceObjects();
+            }
+
+            if (renderer_.BeginFrame(D3DCOLOR_XRGB(32, 36, 42)))
+            {
+                renderManager_.Render(context);
+                imgui_.Render(*scene, renderer_, hwnd_);
+                renderer_.EndFrame();
+            }
+            else
+            {
+                imgui_.EndFrame();
             }
         }
 
+        activeScene_ = nullptr;
         scene->Unload();
+        imgui_.Shutdown();
         return static_cast<int>(message.wParam);
     }
 
@@ -136,13 +176,21 @@ namespace Engine
     LRESULT Application::WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         input_.HandleMessage(message, wParam, lParam);
+        if (imgui_.HandleMessage(hwnd, message, wParam, lParam))
+        {
+            return 0;
+        }
 
         switch (message)
         {
         case WM_SIZE:
             if (renderer_.Device() && wParam != SIZE_MINIMIZED)
             {
-                renderer_.Reset();
+                imgui_.InvalidateDeviceObjects();
+                if (SUCCEEDED(renderer_.Reset()))
+                {
+                    imgui_.CreateDeviceObjects();
+                }
             }
             return 0;
 
@@ -171,13 +219,13 @@ namespace Engine
             return false;
         }
 
-        RECT desired = { 0, 0, kClientWidth, kClientHeight };
+        RECT desired = { 0, 0, clientWidth_, clientHeight_ };
         AdjustWindowRect(&desired, WS_OVERLAPPEDWINDOW, FALSE);
 
         hwnd_ = CreateWindowExA(
             0,
             kWindowClassName,
-            "Sigma Engine - Wood Cube",
+            "Sigma Engine - ImGui Controls",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
@@ -216,7 +264,7 @@ namespace Engine
     void Application::UpdateWindowTitle(float fps)
     {
         char title[128];
-        sprintf_s(title, sizeof(title), "Sigma Engine - Wood Cube - %.1f FPS", fps);
+        sprintf_s(title, sizeof(title), "Sigma Engine - ImGui Controls - %.1f FPS", fps);
         SetWindowTextA(hwnd_, title);
     }
 }

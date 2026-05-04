@@ -28,7 +28,7 @@ namespace Engine
 
     void AutoRotateComponent::Update(GameObject& owner, float deltaSeconds, GameContext& context)
     {
-        if (context.input.WasKeyPressed(VK_SPACE))
+        if (!context.uiWantsKeyboard && context.input.WasKeyPressed(VK_SPACE))
         {
             enabled_ = !enabled_;
         }
@@ -52,7 +52,7 @@ namespace Engine
 
     void KeyboardRotationComponent::Update(GameObject& owner, float deltaSeconds, GameContext& context)
     {
-        if (!IsSelected(owner))
+        if (context.uiWantsKeyboard || !IsSelected(owner))
         {
             return;
         }
@@ -77,7 +77,7 @@ namespace Engine
 
     void MouseDragRotationComponent::Update(GameObject& owner, float, GameContext& context)
     {
-        if (!IsSelected(owner) || !context.input.IsMouseDown(MouseButton::Left))
+        if (context.uiWantsMouse || !IsSelected(owner) || !context.input.IsMouseDown(MouseButton::Left))
         {
             return;
         }

@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #include "Direct3DRenderer.h"
+#include "ImGuiManager.h"
 #include "InputManager.h"
 #include "RenderManager.h"
 #include "Scene.h"
@@ -29,7 +30,11 @@ namespace Engine
         HINSTANCE instance_ = nullptr;
         int showCommand_ = SW_SHOW;
         HWND hwnd_ = nullptr;
+        int clientWidth_ = 1920;
+        int clientHeight_ = 1080;
+        Scene* activeScene_ = nullptr;
         Direct3DRenderer renderer_;
+        ImGuiManager imgui_;
         InputManager input_;
         RenderManager renderManager_;
         LARGE_INTEGER qpcFrequency_ = {};

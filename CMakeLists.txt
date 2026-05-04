@@ -58,22 +58,66 @@ else()
     message(FATAL_ERROR "Assimp target was not found after package discovery.")
 endif()
 
+FetchContent_Declare(
+    imgui
+    URL https://github.com/ocornut/imgui/archive/refs/tags/v1.91.9b.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+if(POLICY CMP0169)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0169 OLD)
+endif()
+FetchContent_GetProperties(imgui)
+if(NOT imgui_POPULATED)
+    FetchContent_Populate(imgui)
+endif()
+if(POLICY CMP0169)
+    cmake_policy(POP)
+endif()
+
+FetchContent_Declare(
+    tinyxml2
+    URL https://github.com/leethomason/tinyxml2/archive/refs/tags/10.0.0.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(tinyxml2)
+
+if(TARGET tinyxml2::tinyxml2)
+    set(SIGMA_TINYXML2_TARGET tinyxml2::tinyxml2)
+elseif(TARGET tinyxml2)
+    set(SIGMA_TINYXML2_TARGET tinyxml2)
+else()
+    message(FATAL_ERROR "tinyxml2 target was not found after FetchContent.")
+endif()
+
+set(SIGMA_IMGUI_SOURCES
+    "${imgui_SOURCE_DIR}/imgui.cpp"
+    "${imgui_SOURCE_DIR}/imgui_draw.cpp"
+    "${imgui_SOURCE_DIR}/imgui_tables.cpp"
+    "${imgui_SOURCE_DIR}/imgui_widgets.cpp"
+    "${imgui_SOURCE_DIR}/backends/imgui_impl_win32.cpp"
+    "${imgui_SOURCE_DIR}/backends/imgui_impl_dx9.cpp"
+)
+
 file(GLOB_RECURSE SIGMA_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
 )
 
-add_executable(Sigma WIN32 ${SIGMA_SOURCES})
+add_executable(Sigma WIN32 ${SIGMA_SOURCES} ${SIGMA_IMGUI_SOURCES})
 
 target_include_directories(Sigma PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${DIRECTX_SDK_INCLUDE_DIR}"
+    "${imgui_SOURCE_DIR}"
+    "${imgui_SOURCE_DIR}/backends"
 )
 
 target_compile_definitions(Sigma PRIVATE
     WIN32
     _WINDOWS
     NOMINMAX
+    IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 )
 
 if(MSVC)
@@ -84,6 +128,7 @@ target_link_directories(Sigma PRIVATE "${DIRECTX_SDK_LIB_DIR}")
 
 target_link_libraries(Sigma PRIVATE
     ${SIGMA_ASSIMP_TARGET}
+    ${SIGMA_TINYXML2_TARGET}
     d3d9
     d3dx9
     dxguid

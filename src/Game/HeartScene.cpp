@@ -4,52 +4,14 @@
 #include "../Engine/Direct3DRenderer.h"
 #include "../Engine/GameContext.h"
 #include "../Engine/Material.h"
-#include "../Engine/PathUtils.h"
 #include "../Engine/RotationComponents.h"
 #include "../Engine/SceneObject.h"
 #include "../Engine/TransformComponent.h"
-
-#include <cstdarg>
-#include <cstdio>
 
 namespace Game
 {
     namespace
     {
-        void AppendHeartLoadLog(const char* format, ...)
-        {
-            char logPath[MAX_PATH];
-            Engine::BuildExecutableRelativePath("heart_scene_load.log", logPath, MAX_PATH);
-
-            FILE* logFile = nullptr;
-            if (fopen_s(&logFile, logPath, "a") != 0 || !logFile)
-            {
-                return;
-            }
-
-            va_list args;
-            va_start(args, format);
-            vfprintf(logFile, format, args);
-            va_end(args);
-            fprintf(logFile, "\n");
-            fclose(logFile);
-        }
-
-        void ResetHeartLoadLog()
-        {
-            char logPath[MAX_PATH];
-            Engine::BuildExecutableRelativePath("heart_scene_load.log", logPath, MAX_PATH);
-
-            FILE* logFile = nullptr;
-            if (fopen_s(&logFile, logPath, "w") != 0 || !logFile)
-            {
-                return;
-            }
-
-            fprintf(logFile, "HeartScene load trace\n");
-            fclose(logFile);
-        }
-
         struct HeartAssetSet
         {
             const char* meshPath = "";
@@ -68,7 +30,6 @@ namespace Game
             IDirect3DDevice9* device,
             const char* primaryPath,
             const char* fallbackPath,
-            const char* label,
             const char*& loadedPath)
         {
             loadedPath = primaryPath;
@@ -78,12 +39,10 @@ namespace Game
                 return texture;
             }
 
-            AppendHeartLoadLog("  %s failed: %s", label, primaryPath);
             texture = assets.LoadTexture(device, fallbackPath);
             if (texture)
             {
                 loadedPath = fallbackPath;
-                AppendHeartLoadLog("  %s fallback: %s", label, fallbackPath);
             }
             return texture;
         }
@@ -91,12 +50,10 @@ namespace Game
         bool AddHeartObject(Engine::Scene& scene, Engine::GameContext& context, const HeartAssetSet& assetSet)
         {
             Engine::AssetManager& assets = Engine::AssetManager::Instance();
-            AppendHeartLoadLog("Loading %s", assetSet.objectName);
 
             auto mesh = assets.LoadMesh(context.renderer.Device(), assetSet.meshPath);
             if (!mesh)
             {
-                AppendHeartLoadLog("  mesh failed: %s", assetSet.meshPath);
                 return false;
             }
 
@@ -106,25 +63,14 @@ namespace Game
                 context.renderer.Device(),
                 assetSet.diffusePath,
                 assetSet.diffuseFallbackPath,
-                "diffuse",
                 diffuseTexturePath);
             if (!diffuseTexture)
             {
-                AppendHeartLoadLog("  diffuse failed: %s", assetSet.diffusePath);
                 return false;
             }
 
             auto normalMap = assets.LoadTexture(context.renderer.Device(), assetSet.normalPath);
-            if (!normalMap)
-            {
-                AppendHeartLoadLog("  optional normal missing: %s", assetSet.normalPath);
-            }
-
             auto bumpMap = assets.LoadTexture(context.renderer.Device(), assetSet.bumpPath);
-            if (!bumpMap)
-            {
-                AppendHeartLoadLog("  optional bump missing: %s", assetSet.bumpPath);
-            }
 
             auto& heartPart = scene.CreateObject(assetSet.objectName);
             auto& transform = heartPart.AddComponent<Engine::TransformComponent>();
@@ -151,15 +97,12 @@ namespace Game
             //heartPart.AddComponent<Engine::AutoRotateComponent>(0.55f, 0.18f);
             heartPart.AddComponent<Engine::KeyboardRotationComponent>(1.2f);
             heartPart.AddComponent<Engine::MouseDragRotationComponent>(0.006f);
-            AppendHeartLoadLog("  success");
             return true;
         }
     }
 
     bool HeartScene::Load(Engine::GameContext& context)
     {
-        ResetHeartLoadLog();
-
         const HeartAssetSet innerHeart
         {
             "assets\\static_objects\\Heart Inside.FBX",
@@ -187,8 +130,6 @@ namespace Game
         };
 
         const bool innerLoaded = AddHeartObject(*this, context, innerHeart);
-        const bool outerLoaded = innerLoaded && AddHeartObject(*this, context, outerHeart);
-        AppendHeartLoadLog("HeartScene result: inner=%s outer=%s", innerLoaded ? "ok" : "failed", outerLoaded ? "ok" : "failed");
-        return innerLoaded && outerLoaded;
+        return innerLoaded && AddHeartObject(*this, context, outerHeart);
     }
 }

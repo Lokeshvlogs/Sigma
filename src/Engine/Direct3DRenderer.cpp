@@ -142,6 +142,28 @@ namespace Engine
         }
     }
 
+    HRESULT Direct3DRenderer::DeviceCooperativeLevel() const
+    {
+        if (!device_)
+        {
+            return E_FAIL;
+        }
+
+        return device_->TestCooperativeLevel();
+    }
+
+    void Direct3DRenderer::SetCameraTransform(const D3DXVECTOR3& eye, const D3DXVECTOR3& target, const D3DXVECTOR3& up)
+    {
+        eye_ = eye;
+        target_ = target;
+        up_ = up;
+
+        if (device_)
+        {
+            ConfigureCameraAndProjection();
+        }
+    }
+
     D3DVIEWPORT9 Direct3DRenderer::Viewport() const
     {
         D3DVIEWPORT9 viewport = {};
@@ -187,11 +209,7 @@ namespace Engine
         float width = static_cast<float>(AtLeastOne(client.right - client.left));
         float height = static_cast<float>(AtLeastOne(client.bottom - client.top));
 
-        D3DXVECTOR3 eye(0.0f, 300.0f, 300.5f);
-        D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
-        D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
-
-        D3DXMatrixLookAtLH(&view_, &eye, &target, &up);
+        D3DXMatrixLookAtLH(&view_, &eye_, &target_, &up_);
         device_->SetTransform(D3DTS_VIEW, &view_);
 
         D3DXMatrixPerspectiveFovLH(&projection_, D3DX_PI / 4.0f, width / height, 0.1f, 1000.0f);

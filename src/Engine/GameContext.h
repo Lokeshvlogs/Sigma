@@ -10,5 +10,7 @@ namespace Engine
         InputManager& input;
         Direct3DRenderer& renderer;
         bool requestQuit = false;
+        bool uiWantsKeyboard = false;
+        bool uiWantsMouse = false;
     };
 }

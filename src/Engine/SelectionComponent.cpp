@@ -20,6 +20,17 @@ namespace Engine
 
     void SelectionComponent::Update(GameObject& owner, float, GameContext& context)
     {
+        if (context.uiWantsMouse)
+        {
+            hoveredFaceIndex_ = -1;
+            if (targetSceneObject_)
+            {
+                targetSceneObject_->hoveredFaceIndex = -1;
+                targetSceneObject_->selected = selected_;
+            }
+            return;
+        }
+
         hoveredFaceIndex_ = HitTestFace(owner, context);
 
         if (context.input.WasMousePressed(MouseButton::Left))

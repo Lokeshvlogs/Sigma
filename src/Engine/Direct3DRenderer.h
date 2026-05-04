@@ -20,10 +20,15 @@ namespace Engine
         bool PrepareFrame();
         bool BeginFrame(D3DCOLOR clearColor);
         void EndFrame();
+        HRESULT DeviceCooperativeLevel() const;
+        void SetCameraTransform(const D3DXVECTOR3& eye, const D3DXVECTOR3& target, const D3DXVECTOR3& up);
 
         IDirect3DDevice9* Device() const { return device_; }
         const D3DXMATRIX& ViewMatrix() const { return view_; }
         const D3DXMATRIX& ProjectionMatrix() const { return projection_; }
+        const D3DXVECTOR3& Eye() const { return eye_; }
+        const D3DXVECTOR3& Target() const { return target_; }
+        const D3DXVECTOR3& Up() const { return up_; }
         D3DVIEWPORT9 Viewport() const;
 
     private:
@@ -35,6 +40,9 @@ namespace Engine
         IDirect3DDevice9* device_ = nullptr;
         D3DPRESENT_PARAMETERS presentParameters_ = {};
         bool deviceReady_ = false;
+        D3DXVECTOR3 eye_ = D3DXVECTOR3(0.0f, 300.0f, 300.5f);
+        D3DXVECTOR3 target_ = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+        D3DXVECTOR3 up_ = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
         D3DXMATRIX view_ = {};
         D3DXMATRIX projection_ = {};
     };
