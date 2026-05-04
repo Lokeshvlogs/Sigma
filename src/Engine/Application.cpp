@@ -8,8 +8,8 @@ namespace Engine
 {
     namespace
     {
-        const int kClientWidth = 800;
-        const int kClientHeight = 600;
+        const int kClientWidth = 1920;
+        const int kClientHeight = 1080;
         const char* kWindowClassName = "SigmaD3D9GameWindow";
     }
 

@@ -165,11 +165,14 @@ namespace Engine
         material.Ambient = material.Diffuse;
         device_->SetMaterial(&material);
 
-        device_->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-        device_->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-        device_->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-        device_->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-        device_->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+        for (DWORD samplerIndex = 0; samplerIndex < 3; ++samplerIndex)
+        {
+            device_->SetSamplerState(samplerIndex, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+            device_->SetSamplerState(samplerIndex, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+            device_->SetSamplerState(samplerIndex, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+            device_->SetSamplerState(samplerIndex, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+            device_->SetSamplerState(samplerIndex, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+        }
 
         device_->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
         device_->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -184,14 +187,14 @@ namespace Engine
         float width = static_cast<float>(AtLeastOne(client.right - client.left));
         float height = static_cast<float>(AtLeastOne(client.bottom - client.top));
 
-        D3DXVECTOR3 eye(0.0f, 2.2f, -5.5f);
+        D3DXVECTOR3 eye(0.0f, 300.0f, 300.5f);
         D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
         D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);
 
         D3DXMatrixLookAtLH(&view_, &eye, &target, &up);
         device_->SetTransform(D3DTS_VIEW, &view_);
 
-        D3DXMatrixPerspectiveFovLH(&projection_, D3DX_PI / 4.0f, width / height, 0.1f, 100.0f);
+        D3DXMatrixPerspectiveFovLH(&projection_, D3DX_PI / 4.0f, width / height, 0.1f, 1000.0f);
         device_->SetTransform(D3DTS_PROJECTION, &projection_);
     }
 }

@@ -41,8 +41,16 @@ namespace Engine
             std::vector<MeshFaceSpan> faceSpans,
             float boundingRadius);
 
+        static std::shared_ptr<Mesh> CreateFromData(
+            IDirect3DDevice9* device,
+            const std::vector<Vertex>& vertices,
+            const std::vector<DWORD>& indices,
+            std::vector<MeshFaceSpan> faceSpans,
+            float boundingRadius);
+
         IDirect3DVertexBuffer9* vertexBuffer_ = nullptr;
         IDirect3DIndexBuffer9* indexBuffer_ = nullptr;
+        D3DFORMAT indexFormat_ = D3DFMT_INDEX16;
         UINT vertexCount_ = 0;
         UINT primitiveCount_ = 0;
         int faceCount_ = 0;

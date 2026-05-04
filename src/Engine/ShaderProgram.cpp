@@ -13,13 +13,19 @@ namespace Engine
     {
         Reset();
 
+        const D3DXMACRO defines[] =
+        {
+            { "SIGMA_RUNTIME_SHADER", "1" },
+            { nullptr, nullptr }
+        };
+
         ID3DXBuffer* byteCode = nullptr;
         ID3DXBuffer* errors = nullptr;
         HRESULT hr = D3DXCompileShaderFromFileA(
             path,
+            defines,
             nullptr,
-            nullptr,
-            "main",
+            "PS_Main",
             "ps_2_0",
             0,
             &byteCode,

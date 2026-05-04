@@ -50,7 +50,7 @@ namespace Game
         sceneObject.renderStates.cullMode = D3DCULL_NONE;
 
         cube.AddComponent<Engine::SelectionComponent>(mesh->BoundingRadius(), &sceneObject);
-        cube.AddComponent<Engine::AutoRotateComponent>(0.9f, 0.35f);
+        //cube.AddComponent<Engine::AutoRotateComponent>(0.9f, 0.35f);
         cube.AddComponent<Engine::KeyboardRotationComponent>(1.8f);
         cube.AddComponent<Engine::MouseDragRotationComponent>(0.008f);
         return true;

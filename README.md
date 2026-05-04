@@ -14,11 +14,17 @@ Run:
 run.bat
 ```
 
+Launch the heart scene:
+
+```bat
+run.bat heart
+```
+
 Project layout:
 
 - `src/main.cpp` - thin Win32 entry point.
 - `src/Engine/` - reusable engine modules: application loop, input, scene, game objects, components, Direct3D renderer, meshes, and textures.
-- `src/Game/` - game-specific scenes and composition.
+- `src/Game/` - game-specific scenes and composition, including `SampleScene` and `HeartScene`.
 - `assets/textures/` - diffuse/albedo textures such as `default_diffuse.jpg`.
 - `assets/bump_maps/` - normal or bump maps for future materials.
 - `assets/images/` - UI, reference, splash, or non-material images.
@@ -34,5 +40,7 @@ Controls:
 - Hover a cube face to highlight it with a blue shader pass.
 - Left-drag the selected cube to rotate it with the mouse.
 - `Esc` quits.
+
+`HeartScene` uses the same keyboard and mouse rotation controls and renders the inside and outside heart meshes with a shared `Heart.fx` shader.
 
 The engine uses a component-based object model. A game object is assembled from reusable components such as `TransformComponent`, `SelectionComponent`, `AutoRotateComponent`, `KeyboardRotationComponent`, and `MouseDragRotationComponent`. Scenes own `SceneObject` render entries with material data and render states; `RenderManager` renders registered scenes using shader passes loaded from `assets/shaders`.

@@ -17,11 +17,11 @@ namespace Engine
         void AppendMeshData(
             const aiMesh& sourceMesh,
             std::vector<Vertex>& vertices,
-            std::vector<WORD>& indices,
+            std::vector<DWORD>& indices,
             std::vector<MeshFaceSpan>& faceSpans,
             float& boundingRadius)
         {
-            const UINT baseVertex = static_cast<UINT>(vertices.size());
+            const DWORD baseVertex = static_cast<DWORD>(vertices.size());
             for (unsigned int vertexIndex = 0; vertexIndex < sourceMesh.mNumVertices; ++vertexIndex)
             {
                 const aiVector3D& position = sourceMesh.mVertices[vertexIndex];
@@ -60,7 +60,7 @@ namespace Engine
 
                 for (unsigned int indexIndex = 0; indexIndex < face.mNumIndices; ++indexIndex)
                 {
-                    indices.push_back(static_cast<WORD>(baseVertex + face.mIndices[indexIndex]));
+                    indices.push_back(baseVertex + face.mIndices[indexIndex]);
                 }
             }
 
@@ -78,6 +78,7 @@ namespace Engine
 
             faceSpans.insert(faceSpans.end(), meshFaceSpans.begin(), meshFaceSpans.end());
         }
+
     }
 
     Mesh::~Mesh()
@@ -101,9 +102,12 @@ namespace Engine
         }
 
         std::vector<Vertex> vertices;
-        std::vector<WORD> indices;
+        std::vector<DWORD> indices;
         std::vector<MeshFaceSpan> faceSpans;
         float boundingRadius = 0.0f;
+        D3DCAPS9 deviceCaps = {};
+        const bool hasDeviceCaps = SUCCEEDED(device->GetDeviceCaps(&deviceCaps));
+        const bool supportsIndex32 = !hasDeviceCaps || deviceCaps.MaxVertexIndex > 65535;
 
         for (unsigned int meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)
         {
@@ -113,7 +117,7 @@ namespace Engine
                 continue;
             }
 
-            if (vertices.size() + sourceMesh->mNumVertices > 65535)
+            if (!supportsIndex32 && vertices.size() + sourceMesh->mNumVertices > 65535)
             {
                 return nullptr;
             }
@@ -121,7 +125,19 @@ namespace Engine
             AppendMeshData(*sourceMesh, vertices, indices, faceSpans, boundingRadius);
         }
 
-        return CreateFromData(device, vertices, indices, faceSpans, boundingRadius);
+        if (vertices.size() > 65535)
+        {
+            return CreateFromData(device, vertices, indices, std::move(faceSpans), boundingRadius);
+        }
+
+        std::vector<WORD> indices16;
+        indices16.reserve(indices.size());
+        for (DWORD index : indices)
+        {
+            indices16.push_back(static_cast<WORD>(index));
+        }
+
+        return CreateFromData(device, vertices, indices16, std::move(faceSpans), boundingRadius);
     }
 
     std::shared_ptr<Mesh> Mesh::CreateFromData(
@@ -169,6 +185,61 @@ namespace Engine
         memcpy(indexMemory, indices.data(), indexBufferSize);
         mesh->indexBuffer_->Unlock();
 
+        mesh->indexFormat_ = D3DFMT_INDEX16;
+        mesh->vertexCount_ = static_cast<UINT>(vertices.size());
+        mesh->primitiveCount_ = static_cast<UINT>(indices.size() / 3);
+        mesh->faceCount_ = static_cast<int>(faceSpans.size());
+        mesh->boundingRadius_ = boundingRadius > 0.0f ? boundingRadius : 1.0f;
+        mesh->faceSpans_ = std::move(faceSpans);
+        return mesh;
+    }
+
+    std::shared_ptr<Mesh> Mesh::CreateFromData(
+        IDirect3DDevice9* device,
+        const std::vector<Vertex>& vertices,
+        const std::vector<DWORD>& indices,
+        std::vector<MeshFaceSpan> faceSpans,
+        float boundingRadius)
+    {
+        if (vertices.empty() || indices.empty())
+        {
+            return nullptr;
+        }
+
+        std::shared_ptr<Mesh> mesh(new Mesh());
+        const UINT vertexBufferSize = static_cast<UINT>(vertices.size() * sizeof(Vertex));
+        HRESULT hr = device->CreateVertexBuffer(vertexBufferSize, 0, Vertex::FVF, D3DPOOL_MANAGED, &mesh->vertexBuffer_, nullptr);
+        if (FAILED(hr))
+        {
+            return nullptr;
+        }
+
+        void* vertexMemory = nullptr;
+        hr = mesh->vertexBuffer_->Lock(0, vertexBufferSize, &vertexMemory, 0);
+        if (FAILED(hr))
+        {
+            return nullptr;
+        }
+        memcpy(vertexMemory, vertices.data(), vertexBufferSize);
+        mesh->vertexBuffer_->Unlock();
+
+        const UINT indexBufferSize = static_cast<UINT>(indices.size() * sizeof(DWORD));
+        hr = device->CreateIndexBuffer(indexBufferSize, 0, D3DFMT_INDEX32, D3DPOOL_MANAGED, &mesh->indexBuffer_, nullptr);
+        if (FAILED(hr))
+        {
+            return nullptr;
+        }
+
+        void* indexMemory = nullptr;
+        hr = mesh->indexBuffer_->Lock(0, indexBufferSize, &indexMemory, 0);
+        if (FAILED(hr))
+        {
+            return nullptr;
+        }
+        memcpy(indexMemory, indices.data(), indexBufferSize);
+        mesh->indexBuffer_->Unlock();
+
+        mesh->indexFormat_ = D3DFMT_INDEX32;
         mesh->vertexCount_ = static_cast<UINT>(vertices.size());
         mesh->primitiveCount_ = static_cast<UINT>(indices.size() / 3);
         mesh->faceCount_ = static_cast<int>(faceSpans.size());

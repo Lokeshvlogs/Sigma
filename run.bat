@@ -13,7 +13,7 @@ if not exist "%EXE%" (
     exit /b 1
 )
 
-"%EXE%"
+"%EXE%" %*
 set "RESULT=%ERRORLEVEL%"
 
 popd

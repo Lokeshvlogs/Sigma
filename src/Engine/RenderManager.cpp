@@ -29,6 +29,11 @@ namespace Engine
             return static_cast<int>(color & 0xff);
         }
 
+        int Alpha(D3DCOLOR color)
+        {
+            return static_cast<int>((color >> 24) & 0xff);
+        }
+
         float ColorChannel(int value)
         {
             return static_cast<float>(value) / 255.0f;
@@ -41,7 +46,7 @@ namespace Engine
                 ColorChannel(Red(tint)),
                 ColorChannel(Green(tint)),
                 ColorChannel(Blue(tint)),
-                1.0f
+                ColorChannel(Alpha(tint))
             };
             device->SetPixelShaderConstantF(0, color, 1);
         }
@@ -124,6 +129,8 @@ namespace Engine
 
         device->SetPixelShader(nullptr);
         device->SetTexture(0, nullptr);
+        device->SetTexture(1, nullptr);
+        device->SetTexture(2, nullptr);
         device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
         device->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
     }
@@ -137,6 +144,8 @@ namespace Engine
         }
 
         device->SetTexture(0, sceneObject.material.diffuseTexture ? sceneObject.material.diffuseTexture->Native() : nullptr);
+        device->SetTexture(1, sceneObject.material.normalMap ? sceneObject.material.normalMap->Native() : nullptr);
+        device->SetTexture(2, sceneObject.material.bumpMap ? sceneObject.material.bumpMap->Native() : nullptr);
 
         if (static_cast<int>(sceneObject.material.faceTints.size()) == sceneObject.mesh->FaceCount())
         {
@@ -182,6 +191,8 @@ namespace Engine
         }
 
         device->SetTexture(0, nullptr);
+        device->SetTexture(1, nullptr);
+        device->SetTexture(2, nullptr);
         device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
         device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
         device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
