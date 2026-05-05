@@ -82,6 +82,13 @@ namespace Engine
                 }
                 break;
 
+            case PixelShaderConstantSource::ShaderParameters:
+                if (shaderReady)
+                {
+                    device->SetPixelShaderConstantF(registerIndex, sceneObject.material.shaderParameters.data(), 1);
+                }
+                break;
+
             case PixelShaderConstantSource::HighlightColor:
                 if (shaderReady)
                 {

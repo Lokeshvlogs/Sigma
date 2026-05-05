@@ -3,6 +3,7 @@ sampler2D DiffuseTexture : register(s0);
 sampler2D NormalTexture : register(s1);
 sampler2D BumpTexture : register(s2);
 float4 TintColor : register(c0);
+float4 MaterialParameters : register(c1);
 
 struct VSInput
 {
@@ -32,7 +33,10 @@ float3 DecodeNormal(float3 encodedNormal)
 float4 PS_Main(VSOutput input) : COLOR0
 {
     float4 diffuse = tex2D(DiffuseTexture, input.texCoord);
-    float3 normal = DecodeNormal(tex2D(NormalTexture, input.texCoord).xyz);
+    float3 normalSample = tex2D(NormalTexture, input.texCoord).xyz;
+    float3 normal = dot(normalSample, normalSample) > 0.0001f
+        ? DecodeNormal(normalSample)
+        : float3(0.0f, 0.0f, 1.0f);
     float4 bump = tex2D(BumpTexture, input.texCoord);
 
     float normalLight = saturate(normal.z * 0.75f + 0.25f);
@@ -42,7 +46,9 @@ float4 PS_Main(VSOutput input) : COLOR0
     float3 litColor = diffuse.rgb * (0.42f + 0.58f * normalLight);
     litColor += float3(0.18f, 0.03f, 0.03f) * sheen;
 
-    float alpha = saturate(diffuse.a * TintColor.a);
+    float useDiffuseAlpha = saturate(MaterialParameters.y);
+    float baseAlpha = lerp(MaterialParameters.x, diffuse.a, useDiffuseAlpha);
+    float alpha = saturate(baseAlpha * TintColor.a);
     return float4(litColor * TintColor.rgb, alpha);
 }
 

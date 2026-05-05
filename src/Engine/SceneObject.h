@@ -39,6 +39,7 @@ namespace Engine
     {
         None,
         TintColor,
+        ShaderParameters,
         HighlightColor,
         OverlayColor,
         OverlayParameters

@@ -132,6 +132,8 @@ namespace Engine
             {
             case PixelShaderConstantSource::TintColor:
                 return "tint-color";
+            case PixelShaderConstantSource::ShaderParameters:
+                return "shader-parameters";
             case PixelShaderConstantSource::HighlightColor:
                 return "highlight-color";
             case PixelShaderConstantSource::OverlayColor:
@@ -154,6 +156,11 @@ namespace Engine
             if (strcmp(value, "tint-color") == 0)
             {
                 return PixelShaderConstantSource::TintColor;
+            }
+
+            if (strcmp(value, "shader-parameters") == 0)
+            {
+                return PixelShaderConstantSource::ShaderParameters;
             }
 
             if (strcmp(value, "highlight-color") == 0)
@@ -334,6 +341,7 @@ namespace Engine
 
                     QueryColorAttributes(materialElement->FirstChildElement("DefaultTint"), objectSettings.material.defaultTint);
                     QueryColorAttributes(materialElement->FirstChildElement("SelectedTint"), objectSettings.material.selectedTint);
+                    QueryFloat4Attributes(materialElement->FirstChildElement("ShaderParameters"), objectSettings.material.shaderParameters);
                     QueryFloat4Attributes(materialElement->FirstChildElement("HighlightColor"), objectSettings.material.highlightColor);
                     QueryFloat4Attributes(materialElement->FirstChildElement("OverlayColor"), objectSettings.material.overlayColor);
                     QueryFloat4Attributes(materialElement->FirstChildElement("OverlayParameters"), objectSettings.material.overlayParameters);
@@ -484,6 +492,10 @@ namespace Engine
             tinyxml2::XMLElement* selectedTintElement = document.NewElement("SelectedTint");
             SetColorAttributes(*selectedTintElement, object.material.selectedTint);
             materialElement->InsertEndChild(selectedTintElement);
+
+            tinyxml2::XMLElement* shaderParametersElement = document.NewElement("ShaderParameters");
+            SetFloat4Attributes(*shaderParametersElement, object.material.shaderParameters);
+            materialElement->InsertEndChild(shaderParametersElement);
 
             tinyxml2::XMLElement* highlightColorElement = document.NewElement("HighlightColor");
             SetFloat4Attributes(*highlightColorElement, object.material.highlightColor);

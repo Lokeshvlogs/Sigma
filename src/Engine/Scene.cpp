@@ -119,6 +119,7 @@ namespace Engine
             sceneObject.material.faceTints = objectSettings.material.faceTints;
             sceneObject.material.defaultTint = objectSettings.material.defaultTint;
             sceneObject.material.selectedTint = objectSettings.material.selectedTint;
+            sceneObject.material.shaderParameters = objectSettings.material.shaderParameters;
             sceneObject.material.highlightColor = objectSettings.material.highlightColor;
             sceneObject.material.overlayColor = objectSettings.material.overlayColor;
             sceneObject.material.overlayParameters = objectSettings.material.overlayParameters;
@@ -247,6 +248,7 @@ namespace Engine
             objectSettings->material.faceTints = sceneObject->material.faceTints;
             objectSettings->material.defaultTint = sceneObject->material.defaultTint;
             objectSettings->material.selectedTint = sceneObject->material.selectedTint;
+            objectSettings->material.shaderParameters = sceneObject->material.shaderParameters;
             objectSettings->material.highlightColor = sceneObject->material.highlightColor;
             objectSettings->material.overlayColor = sceneObject->material.overlayColor;
             objectSettings->material.overlayParameters = sceneObject->material.overlayParameters;
