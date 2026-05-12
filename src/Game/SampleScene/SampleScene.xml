@@ -6,8 +6,12 @@
         <Target x="0.0" y="0.0" z="0.0" />
         <Up x="0.0" y="1.0" z="0.0" />
     </Camera>
+    <Lighting type="balanced" keyIntensity="1.0" fillIntensity="0.36" ambientIntensity="0.24" warmth="0.1">
+        <KeyDirection x="-0.35" y="0.72" z="0.6" />
+        <FillDirection x="0.45" y="0.22" z="-0.4" />
+    </Lighting>
     <Objects>
-        <Object name="Sample Cube" mesh="assets\static_objects\wooden_cube.fbx">
+        <Object name="Sample Cube" mesh="assets\static_objects\wooden_cube.fbx" visible="true">
             <Translation x="0.0" y="0.0" z="0.0" />
             <Rotation x="0.35" y="0.0" z="0.0" />
             <Scale x="1.0" y="1.0" z="1.0" />

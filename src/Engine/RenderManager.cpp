@@ -126,6 +126,55 @@ namespace Engine
             ApplyPixelShaderConstant(device, sceneObject, renderPass.constant0Source, 0, shaderReady, tintColor);
             ApplyPixelShaderConstant(device, sceneObject, renderPass.constant1Source, 1, shaderReady, tintColor);
         }
+
+        void ApplySceneShaderConstants(IDirect3DDevice9* device, const Scene& scene, bool shaderReady)
+        {
+            if (!shaderReady)
+            {
+                return;
+            }
+
+            const SceneLightingSettings& lighting = scene.Settings().lighting;
+            D3DXVECTOR3 keyDirection = lighting.keyDirection;
+            D3DXVECTOR3 fillDirection = lighting.fillDirection;
+            if (D3DXVec3LengthSq(&keyDirection) < 0.0001f)
+            {
+                keyDirection = D3DXVECTOR3(-0.35f, 0.72f, 0.60f);
+            }
+            if (D3DXVec3LengthSq(&fillDirection) < 0.0001f)
+            {
+                fillDirection = D3DXVECTOR3(0.45f, 0.22f, -0.40f);
+            }
+
+            D3DXVec3Normalize(&keyDirection, &keyDirection);
+            D3DXVec3Normalize(&fillDirection, &fillDirection);
+
+            const float keyDirectionAndIntensity[] =
+            {
+                keyDirection.x,
+                keyDirection.y,
+                keyDirection.z,
+                lighting.keyIntensity
+            };
+            const float fillDirectionAndIntensity[] =
+            {
+                fillDirection.x,
+                fillDirection.y,
+                fillDirection.z,
+                lighting.fillIntensity
+            };
+            const float ambientAndWarmth[] =
+            {
+                lighting.ambientIntensity,
+                lighting.warmth,
+                0.0f,
+                0.0f
+            };
+
+            device->SetPixelShaderConstantF(9, keyDirectionAndIntensity, 1);
+            device->SetPixelShaderConstantF(10, fillDirectionAndIntensity, 1);
+            device->SetPixelShaderConstantF(11, ambientAndWarmth, 1);
+        }
     }
 
     void RenderManager::AddScene(Scene& scene)
@@ -157,7 +206,7 @@ namespace Engine
 
                 for (auto& sceneObject : scene->SceneObjects())
                 {
-                    RenderSceneObject(*sceneObject, context.renderer, phase);
+                    RenderSceneObject(*scene, *sceneObject, context.renderer, phase);
                 }
             }
         }
@@ -197,7 +246,7 @@ namespace Engine
         return shaderPointer->IsReady() ? shaderPointer : nullptr;
     }
 
-    void RenderManager::RenderSceneObject(SceneObject& sceneObject, Direct3DRenderer& renderer, RenderPassPhase phase)
+    void RenderManager::RenderSceneObject(Scene& scene, SceneObject& sceneObject, Direct3DRenderer& renderer, RenderPassPhase phase)
     {
         if (!sceneObject.gameObject || !sceneObject.gameObject->IsActive() || !sceneObject.mesh || sceneObject.renderPasses.empty())
         {
@@ -219,14 +268,14 @@ namespace Engine
         {
             if (renderPass.phase == phase)
             {
-                RenderPass(sceneObject, renderPass, device);
+                RenderPass(scene, sceneObject, renderPass, device);
             }
         }
 
         ClearBoundResources(device);
     }
 
-    void RenderManager::RenderPass(SceneObject& sceneObject, const RenderPassSettings& renderPass, IDirect3DDevice9* device)
+    void RenderManager::RenderPass(Scene& scene, SceneObject& sceneObject, const RenderPassSettings& renderPass, IDirect3DDevice9* device)
     {
         if (!renderPass.enabled)
         {
@@ -263,6 +312,8 @@ namespace Engine
         {
             device->SetPixelShader(nullptr);
         }
+
+        ApplySceneShaderConstants(device, scene, shaderReady);
 
         if (renderPass.drawMode == RenderPassDrawMode::FaceTints &&
             static_cast<int>(sceneObject.material.faceTints.size()) == sceneObject.mesh->FaceCount())

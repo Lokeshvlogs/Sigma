@@ -10,6 +10,24 @@
 
 namespace Engine
 {
+    enum class SceneLightingType
+    {
+        Balanced = 0,
+        Studio = 1,
+        Dramatic = 2
+    };
+
+    struct SceneLightingSettings
+    {
+        SceneLightingType type = SceneLightingType::Balanced;
+        D3DXVECTOR3 keyDirection = D3DXVECTOR3(-0.35f, 0.72f, 0.60f);
+        D3DXVECTOR3 fillDirection = D3DXVECTOR3(0.45f, 0.22f, -0.40f);
+        float keyIntensity = 1.0f;
+        float fillIntensity = 0.36f;
+        float ambientIntensity = 0.24f;
+        float warmth = 0.10f;
+    };
+
     struct MaterialSettings
     {
         std::string diffuseTexturePath;
@@ -37,6 +55,7 @@ namespace Engine
     {
         std::string name;
         std::string meshPath;
+        bool visible = true;
         D3DXVECTOR3 translation = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
         D3DXVECTOR3 rotation = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
         D3DXVECTOR3 scale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
@@ -53,6 +72,7 @@ namespace Engine
         D3DXVECTOR3 cameraEye = D3DXVECTOR3(0.0f, 300.0f, 300.5f);
         D3DXVECTOR3 cameraTarget = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
         D3DXVECTOR3 cameraUp = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+        SceneLightingSettings lighting;
         std::vector<SceneObjectSettings> objects;
     };
 }

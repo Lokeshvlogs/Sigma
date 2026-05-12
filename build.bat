@@ -6,6 +6,24 @@ pushd "%~dp0"
 rem Configure and build the Win32 Direct3D 9 demo through CMake.
 rem The project targets x86 because it links the DirectX SDK (June 2010) x86 libraries.
 
+set "CLEAN_ONLY=0"
+set "CLEAN_FIRST=0"
+
+if /i "%~1"=="clean" set "CLEAN_ONLY=1"
+if /i "%~1"=="--clean" set "CLEAN_FIRST=1"
+if /i "%~1"=="/clean" set "CLEAN_FIRST=1"
+
+if "%CLEAN_ONLY%"=="1" (
+    call :CleanBuildOutput
+    popd
+    endlocal
+    exit /b 0
+)
+
+if "%CLEAN_FIRST%"=="1" (
+    call :CleanBuildOutput
+)
+
 set "DXSDK_DIR=C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)"
 set "DX_INC=%DXSDK_DIR%\Include"
 set "DX_LIB=%DXSDK_DIR%\Lib\x86"
@@ -149,3 +167,12 @@ echo Run: run.bat
 
 popd
 endlocal
+exit /b 0
+
+:CleanBuildOutput
+echo Cleaning generated build output...
+if exist build (
+    rmdir /s /q build
+)
+echo Clean complete.
+exit /b 0

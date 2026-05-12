@@ -36,6 +36,7 @@ namespace Engine
         void Start();
         void Update(float deltaSeconds, GameContext& context);
         const SceneSettings& Settings() const { return settings_; }
+        SceneSettings& MutableSettings() { return settings_; }
 
     protected:
         bool LoadSceneObjectsFromSettings(GameContext& context);

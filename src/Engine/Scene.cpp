@@ -102,6 +102,7 @@ namespace Engine
                 : assets.LoadTexture(context.renderer.Device(), objectSettings.material.bumpMapPath);
 
             auto& gameObject = CreateObject(objectSettings.name.c_str());
+            gameObject.SetActive(objectSettings.visible);
             auto& transform = gameObject.AddComponent<TransformComponent>();
             transform.position = objectSettings.translation;
             transform.rotation = objectSettings.rotation;
@@ -194,6 +195,7 @@ namespace Engine
                     continue;
                 }
 
+                sceneObject->gameObject->SetActive(objectSettings.visible);
                 transform->position = objectSettings.translation;
                 transform->rotation = objectSettings.rotation;
                 transform->scale = objectSettings.scale;
@@ -239,6 +241,7 @@ namespace Engine
                 objectSettings->meshPath = sceneObject->meshAssetPath;
             }
 
+            objectSettings->visible = sceneObject->gameObject->IsActive();
             objectSettings->translation = transform->position;
             objectSettings->rotation = transform->rotation;
             objectSettings->scale = transform->scale;

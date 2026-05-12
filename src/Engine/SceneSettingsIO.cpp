@@ -75,6 +75,35 @@ namespace Engine
                 element->QueryFloatAttribute("w", &values[3]) == tinyxml2::XML_SUCCESS;
         }
 
+        const char* SceneLightingTypeName(SceneLightingType type)
+        {
+            switch (type)
+            {
+            case SceneLightingType::Studio:
+                return "studio";
+            case SceneLightingType::Dramatic:
+                return "dramatic";
+            case SceneLightingType::Balanced:
+            default:
+                return "balanced";
+            }
+        }
+
+        SceneLightingType ParseSceneLightingType(const char* value)
+        {
+            if (value && strcmp(value, "studio") == 0)
+            {
+                return SceneLightingType::Studio;
+            }
+
+            if (value && strcmp(value, "dramatic") == 0)
+            {
+                return SceneLightingType::Dramatic;
+            }
+
+            return SceneLightingType::Balanced;
+        }
+
         const char* RenderPassPhaseName(RenderPassPhase phase)
         {
             switch (phase)
@@ -290,6 +319,18 @@ namespace Engine
             QueryVectorAttributes(cameraElement->FirstChildElement("Up"), outSettings.cameraUp);
         }
 
+        const tinyxml2::XMLElement* lightingElement = root->FirstChildElement("Lighting");
+        if (lightingElement)
+        {
+            outSettings.lighting.type = ParseSceneLightingType(lightingElement->Attribute("type"));
+            lightingElement->QueryFloatAttribute("keyIntensity", &outSettings.lighting.keyIntensity);
+            lightingElement->QueryFloatAttribute("fillIntensity", &outSettings.lighting.fillIntensity);
+            lightingElement->QueryFloatAttribute("ambientIntensity", &outSettings.lighting.ambientIntensity);
+            lightingElement->QueryFloatAttribute("warmth", &outSettings.lighting.warmth);
+            QueryVectorAttributes(lightingElement->FirstChildElement("KeyDirection"), outSettings.lighting.keyDirection);
+            QueryVectorAttributes(lightingElement->FirstChildElement("FillDirection"), outSettings.lighting.fillDirection);
+        }
+
         outSettings.objects.clear();
         const tinyxml2::XMLElement* objectsElement = root->FirstChildElement("Objects");
         if (objectsElement)
@@ -311,6 +352,7 @@ namespace Engine
                 {
                     objectSettings.meshPath = meshPath;
                 }
+                objectElement->QueryBoolAttribute("visible", &objectSettings.visible);
 
                 QueryVectorAttributes(objectElement->FirstChildElement("Translation"), objectSettings.translation);
                 QueryVectorAttributes(objectElement->FirstChildElement("Rotation"), objectSettings.rotation);
@@ -456,6 +498,22 @@ namespace Engine
         SetVectorAttributes(*upElement, settings.cameraUp);
         cameraElement->InsertEndChild(upElement);
 
+        tinyxml2::XMLElement* lightingElement = document.NewElement("Lighting");
+        lightingElement->SetAttribute("type", SceneLightingTypeName(settings.lighting.type));
+        lightingElement->SetAttribute("keyIntensity", settings.lighting.keyIntensity);
+        lightingElement->SetAttribute("fillIntensity", settings.lighting.fillIntensity);
+        lightingElement->SetAttribute("ambientIntensity", settings.lighting.ambientIntensity);
+        lightingElement->SetAttribute("warmth", settings.lighting.warmth);
+        root->InsertEndChild(lightingElement);
+
+        tinyxml2::XMLElement* keyDirectionElement = document.NewElement("KeyDirection");
+        SetVectorAttributes(*keyDirectionElement, settings.lighting.keyDirection);
+        lightingElement->InsertEndChild(keyDirectionElement);
+
+        tinyxml2::XMLElement* fillDirectionElement = document.NewElement("FillDirection");
+        SetVectorAttributes(*fillDirectionElement, settings.lighting.fillDirection);
+        lightingElement->InsertEndChild(fillDirectionElement);
+
         tinyxml2::XMLElement* objectsElement = document.NewElement("Objects");
         root->InsertEndChild(objectsElement);
 
@@ -464,6 +522,7 @@ namespace Engine
             tinyxml2::XMLElement* objectElement = document.NewElement("Object");
             objectElement->SetAttribute("name", object.name.c_str());
             objectElement->SetAttribute("mesh", object.meshPath.c_str());
+            objectElement->SetAttribute("visible", object.visible);
             objectsElement->InsertEndChild(objectElement);
 
             tinyxml2::XMLElement* translationElement = document.NewElement("Translation");
